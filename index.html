@@ -768,7 +768,7 @@
    KONFIGURASI — WAJIB DIISI
    ══════════════════════════════════════════════ */
 const SUPA_URL  = 'https://jwkfzwhazwqctqaagfht.supabase.co/rest/v1/';           // ← ganti
-const SUPA_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp3a2Z6d2hhendxY3RxYWFnZmh0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczNTU1NjEsImV4cCI6MjA5MjkzMTU2MX0.rBDdZ9Xk1-223_pykF8c5G8CmGDOVB8n_NULWgnnOC0'; // ← ganti
+const SUPA_KEY  = 'sb_publishable_Qdi5FYcy3kNM7lZ65Luwlg_G7PpXEF-'; // ← ganti
 const ADMIN_PIN = '123456';                              // ← ganti PIN
 
 /* Jadwal buka/tutup portal — 3 fase:
@@ -801,7 +801,7 @@ KODE_ABSENSI.forEach(k=>{ KODE_MAP[k.kode]=k; });
    SUPABASE MINI CLIENT
    ══════════════════════════════════════════════ */
 function sbH() {
-  return {'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Content-Type':'application/json'};
+  return {'apikey':SUPA_KEY,'Authorization':'Bearer '+_KEY,'Content-Type':'application/json'};
 }
 const db = {
   from(t) {
@@ -813,7 +813,7 @@ const db = {
       ord(c,asc=true){this._o=c+'.'+(asc?'asc':'desc');return this;},
       lim(n){this._lim=n;return this;},
       async get(){
-        let u=SUPA_URL+'/rest/v1/'+this._t+'?select='+this._f;
+        let u=_URL+'/rest/v1/'+this._t+'?select='+this._f;
         if(this._w.length)u+='&'+this._w.join('&');
         if(this._o)u+='&order='+this._o;
         if(this._lim)u+='&limit='+this._lim;
