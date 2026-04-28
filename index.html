@@ -767,7 +767,7 @@
 /* ══════════════════════════════════════════════
    KONFIGURASI — WAJIB DIISI
    ══════════════════════════════════════════════ */
-const SUPA_URL  = 'https://jwkfzwhazwqctqaagfht.supabase.co';           // ← ganti
+const SUPASUPA_URL  = 'https://jwkfzwhazwqctqaagfht.supabase.co';           // ← ganti
 const SUPA_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp3a2Z6d2hhendxY3RxYWFnZmh0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczNTU1NjEsImV4cCI6MjA5MjkzMTU2MX0.rBDdZ9Xk1-223_pykF8c5G8CmGDOVB8n_NULWgnnOC0'; // ← ganti
 const ADMIN_PIN = '123456';                              // ← ganti PIN
 
@@ -813,7 +813,7 @@ const db = {
       ord(c,asc=true){this._o=c+'.'+(asc?'asc':'desc');return this;},
       lim(n){this._lim=n;return this;},
       async get(){
-        let u=_URL+'/rest/v1/'+this._t+'?select='+this._f;
+        let u=SUPA_URL+'/rest/v1/'+this._t+'?select='+this._f;
         if(this._w.length)u+='&'+this._w.join('&');
         if(this._o)u+='&order='+this._o;
         if(this._lim)u+='&limit='+this._lim;
@@ -821,20 +821,20 @@ const db = {
         return {data:await r.json(),ok:r.ok};
       },
       async ins(rows){
-        const r=await fetch(SUPA_URL+'/rest/v1/'+this._t,{
+        const r=await fetch(SUPASUPA_URL+'/rest/v1/'+this._t,{
           method:'POST',headers:{...sbH(),'Prefer':'return=minimal'},
           body:JSON.stringify(Array.isArray(rows)?rows:[rows])
         });
         return {ok:r.ok,err:r.ok?null:await r.text()};
       },
       async del(){
-        let u=SUPA_URL+'/rest/v1/'+this._t+'?';
+        let u=SUPASUPA_URL+'/rest/v1/'+this._t+'?';
         if(this._w.length)u+=this._w.join('&');
         const r=await fetch(u,{method:'DELETE',headers:sbH()});
         return {ok:r.ok,err:r.ok?null:await r.text()};
       },
       async upsert(rows,onConflict){
-        let url=SUPA_URL+'/rest/v1/'+this._t;
+        let url=SUPASUPA_URL+'/rest/v1/'+this._t;
         if(onConflict) url+='?on_conflict='+onConflict;
         const r=await fetch(url,{
           method:'POST',headers:{...sbH(),'Prefer':'resolution=merge-duplicates,return=minimal'},
@@ -843,7 +843,7 @@ const db = {
         return {ok:r.ok,err:r.ok?null:await r.text()};
       },
       async patch(body){
-        let u=SUPA_URL+'/rest/v1/'+this._t+'?';
+        let u=SUPASUPA_URL+'/rest/v1/'+this._t+'?';
         if(this._w.length)u+=this._w.join('&');
         const r=await fetch(u,{method:'PATCH',headers:{...sbH(),'Prefer':'return=minimal'},body:JSON.stringify(body)});
         return {ok:r.ok,err:r.ok?null:await r.text()};
