@@ -185,6 +185,16 @@
     .btn-save:disabled{opacity:0.5;cursor:not-allowed;transform:none;}
     .config-status{font-size:0.75rem;color:var(--text-dim);margin-top:10px;min-height:18px;}
 
+    /* Manajemen Pegawai */
+    .peg-table{width:100%;border-collapse:collapse;font-size:0.83rem;}
+    .peg-table th{background:#f5f7fc;color:var(--navy-light);font-size:0.68rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;padding:10px 14px;text-align:left;border-bottom:2px solid #edf0f8;}
+    .peg-table td{padding:11px 14px;border-bottom:1px solid #f0f3ff;color:var(--navy);vertical-align:middle;}
+    .peg-table tr:last-child td{border-bottom:none;}
+    .peg-table tr:hover td{background:#fafbff;}
+    .btn-hapus-peg{background:rgba(255,107,107,0.1);border:1.5px solid rgba(255,107,107,0.3);color:#e53e3e;border-radius:8px;padding:6px 14px;font-size:0.75rem;font-weight:700;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;transition:all 0.2s;white-space:nowrap;}
+    .btn-hapus-peg:hover{background:rgba(255,107,107,0.2);border-color:#e53e3e;}
+    .peg-nip-text{font-size:0.72rem;color:var(--text-dim);font-family:'Courier New',monospace;}
+
     /* Tukar Jadwal */
     .tukar-search-wrap{position:relative;}
     .tukar-search-inp{width:100%;border:2px solid #e8ecf5;border-radius:10px;padding:10px 14px;font-size:0.88rem;font-family:'Plus Jakarta Sans',sans-serif;font-weight:600;color:var(--navy);outline:none;background:white;transition:border-color 0.2s;}
@@ -719,6 +729,53 @@
       <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap;">
         <button class="btn-primary" onclick="eksekusiTukar()" id="btn-tukar" disabled>🔄 Tukar Jadwal Sekarang</button>
         <button onclick="resetTukar()" style="background:none;border:1.5px solid #e2e7f3;border-radius:10px;padding:10px 18px;font-size:0.82rem;font-weight:600;color:var(--text-dim);cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;">Reset</button>
+      </div>
+    </div>
+
+    <!-- ══ SEKSI MANAJEMEN PEGAWAI ══ -->
+    <div class="admin-section" id="seksi-pegawai">
+      <h4>👥 Manajemen Daftar Pegawai</h4>
+      <div style="font-size:0.8rem;color:var(--text-dim);margin-bottom:18px;">
+        Tambah pegawai baru ke sistem atau hapus pegawai yang sudah tidak aktif. Menghapus pegawai <strong>tidak</strong> menghapus riwayat WFH mereka.
+      </div>
+
+      <!-- Sub-tab -->
+      <div style="display:flex;gap:0;background:#f5f7fc;border-radius:12px;padding:4px;border:1px solid #edf0f8;width:fit-content;margin-bottom:20px;">
+        <button id="peg-tab-tambah" class="tab-btn active" onclick="pegTab('tambah')" style="font-size:0.78rem;padding:8px 18px;">➕ Tambah Pegawai</button>
+        <button id="peg-tab-hapus" class="tab-btn" onclick="pegTab('hapus')" style="font-size:0.78rem;padding:8px 18px;">🗑️ Hapus Pegawai</button>
+      </div>
+
+      <!-- Panel: Tambah -->
+      <div id="peg-panel-tambah">
+        <div class="config-grid" style="margin-bottom:14px;">
+          <div class="config-field">
+            <label>NIP (18 digit)</label>
+            <input type="text" id="peg-nip-inp" class="config-inp" maxlength="18" placeholder="Contoh: 199001012020011001" oninput="this.value=this.value.replace(/\D/g,'')">
+          </div>
+          <div class="config-field">
+            <label>Nama Lengkap</label>
+            <input type="text" id="peg-nama-inp" class="config-inp" placeholder="Contoh: Budi Santoso">
+          </div>
+          <div class="config-field">
+            <label>Tim Kerja / Jabatan <span style="font-weight:400;color:var(--text-dim);">(opsional)</span></label>
+            <input type="text" id="peg-tim-inp" class="config-inp" placeholder="Contoh: Subbagian TU">
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+          <button class="btn-save" onclick="tambahPegawai()" id="btn-peg-tambah">➕ Tambah Pegawai</button>
+          <div id="peg-tambah-status" class="config-status"></div>
+        </div>
+      </div>
+
+      <!-- Panel: Hapus -->
+      <div id="peg-panel-hapus" style="display:none;">
+        <div style="display:flex;gap:10px;margin-bottom:14px;align-items:center;flex-wrap:wrap;">
+          <input type="text" id="peg-cari-inp" class="config-inp" style="max-width:300px;" placeholder="🔍 Cari nama atau NIP..." oninput="renderDaftarPegawai()">
+          <button class="btn-save" onclick="loadDaftarPegawai()" style="background:var(--navy);white-space:nowrap;">🔄 Muat Ulang</button>
+        </div>
+        <div id="peg-list-wrap">
+          <div style="color:var(--text-dim);font-size:0.83rem;padding:16px 0;">Klik <strong>Muat Ulang</strong> untuk memuat daftar pegawai.</div>
+        </div>
       </div>
     </div>
 
@@ -2966,6 +3023,132 @@ function renderJadwalMingguan(){
 }
 
 if(S.nip) setUserBar();
+
+/* ══════════════════════════════════════════════
+   MANAJEMEN PEGAWAI
+   ══════════════════════════════════════════════ */
+function pegTab(tab){
+  document.getElementById('peg-panel-tambah').style.display = tab==='tambah'?'block':'none';
+  document.getElementById('peg-panel-hapus').style.display  = tab==='hapus'?'block':'none';
+  document.getElementById('peg-tab-tambah').className = 'tab-btn'+(tab==='tambah'?' active':'');
+  document.getElementById('peg-tab-hapus').className  = 'tab-btn'+(tab==='hapus'?' active':'');
+  if(tab==='hapus') loadDaftarPegawai();
+}
+
+async function tambahPegawai(){
+  const nip  = document.getElementById('peg-nip-inp').value.trim();
+  const nama = document.getElementById('peg-nama-inp').value.trim();
+  const tim  = document.getElementById('peg-tim-inp').value.trim();
+  const status = document.getElementById('peg-tambah-status');
+
+  if(nip.length !== 18){ status.style.color='#e53e3e'; status.textContent='⚠️ NIP harus tepat 18 digit.'; return; }
+  if(!nama){ status.style.color='#e53e3e'; status.textContent='⚠️ Nama lengkap wajib diisi.'; return; }
+
+  const btn = document.getElementById('btn-peg-tambah');
+  btn.disabled=true; status.style.color='var(--text-dim)'; status.textContent='Menyimpan...';
+
+  const cek = await db.from('pegawai').sel('nip').eq('nip',nip).lim(1).get();
+  if(cek.ok && cek.data && cek.data.length){
+    btn.disabled=false; status.style.color='#e53e3e'; status.textContent='❌ NIP sudah terdaftar di sistem.'; return;
+  }
+
+  const row = { nip, nama };
+  if(tim) row.tim_kerja = tim;
+
+  const res = await db.from('pegawai').ins(row);
+  btn.disabled=false;
+  if(res.ok){
+    status.style.color='#00875a';
+    status.textContent='✅ Pegawai berhasil ditambahkan!';
+    alog(`<span class="log-ok">✅ Tambah pegawai: ${nama} (${nip})</span>`);
+    document.getElementById('peg-nip-inp').value='';
+    document.getElementById('peg-nama-inp').value='';
+    document.getElementById('peg-tim-inp').value='';
+    S.pegawaiAll.push({nip,nama,tim_kerja:tim||''});
+    S.totalPeg++;
+    document.getElementById('s-total').textContent=S.totalPeg;
+    setTimeout(()=>{ status.textContent=''; }, 4000);
+  } else {
+    status.style.color='#e53e3e';
+    status.textContent='❌ Gagal menyimpan: '+(res.err||'Unknown error');
+    alog(`<span class="log-err">❌ Gagal tambah pegawai ${nip}: ${res.err}</span>`);
+  }
+}
+
+let _pegListAll = [];
+
+async function loadDaftarPegawai(){
+  const wrap = document.getElementById('peg-list-wrap');
+  wrap.innerHTML='<div style="color:var(--text-dim);font-size:0.83rem;padding:16px 0;">⏳ Memuat daftar pegawai...</div>';
+  const {data,ok} = await db.from('pegawai').sel('nip,nama,tim_kerja').ord('nama').get();
+  if(!ok){ wrap.innerHTML='<div style="color:#e53e3e;font-size:0.83rem;">❌ Gagal memuat data pegawai.</div>'; return; }
+  _pegListAll = data||[];
+  renderDaftarPegawai();
+}
+
+function renderDaftarPegawai(){
+  const wrap = document.getElementById('peg-list-wrap');
+  const q = (document.getElementById('peg-cari-inp')?.value||'').toLowerCase();
+  const list = _pegListAll.filter(p=>
+    p.nama.toLowerCase().includes(q) || p.nip.includes(q)
+  );
+  if(!list.length){
+    wrap.innerHTML='<div style="color:var(--text-dim);font-size:0.83rem;padding:16px 0;">Tidak ada pegawai yang ditemukan.</div>';
+    return;
+  }
+  wrap.innerHTML=`
+    <div style="font-size:0.72rem;color:var(--text-dim);margin-bottom:10px;">Menampilkan ${list.length} dari ${_pegListAll.length} pegawai</div>
+    <div style="overflow-x:auto;border-radius:12px;border:1px solid #edf0f8;">
+      <table class="peg-table">
+        <thead><tr>
+          <th>#</th><th>Nama</th><th>NIP</th><th>Tim / Jabatan</th><th style="text-align:center;">Aksi</th>
+        </tr></thead>
+        <tbody>
+          ${list.map((p,i)=>`
+            <tr>
+              <td style="color:var(--text-dim);">${i+1}</td>
+              <td><strong>${p.nama}</strong></td>
+              <td class="peg-nip-text">${p.nip}</td>
+              <td style="color:var(--text-dim);">${p.tim_kerja||'—'}</td>
+              <td style="text-align:center;">
+                <button class="btn-hapus-peg" onclick="konfirmasiHapusPegawai('${p.nip}','${p.nama.replace(/'/g,"\\'")}')">🗑️ Hapus</button>
+              </td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>`;
+}
+
+async function konfirmasiHapusPegawai(nip, nama){
+  const hasil = await Swal.fire({
+    title: 'Hapus Pegawai?',
+    html: `Anda akan menghapus:<br><br><strong>${nama}</strong><br><span style="font-size:0.8rem;color:#6b7a99;font-family:'Courier New',monospace;">${nip}</span><br><br>
+           <span style="font-size:0.8rem;color:#e53e3e;">⚠️ Aksi ini tidak dapat dibatalkan. Riwayat WFH pegawai ini <em>tidak</em> ikut terhapus.</span>`,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#e53e3e',
+    cancelButtonColor: '#6b7a99',
+    confirmButtonText: '🗑️ Ya, Hapus',
+    cancelButtonText: 'Batal',
+    reverseButtons: true,
+  });
+  if(!hasil.isConfirmed) return;
+
+  const {ok,err} = await db.from('pegawai').eq('nip',nip).del();
+  if(ok){
+    Swal.fire('Berhasil','Pegawai '+nama+' telah dihapus dari sistem.','success');
+    alog(`<span class="log-ok">🗑️ Hapus pegawai: ${nama} (${nip})</span>`);
+    _pegListAll = _pegListAll.filter(p=>p.nip!==nip);
+    S.pegawaiAll = S.pegawaiAll.filter(p=>p.nip!==nip);
+    S.totalPeg = Math.max(0, S.totalPeg-1);
+    document.getElementById('s-total').textContent=S.totalPeg;
+    renderDaftarPegawai();
+  } else {
+    Swal.fire('Gagal','Tidak dapat menghapus pegawai: '+(err||'Unknown error'),'error');
+    alog(`<span class="log-err">❌ Gagal hapus pegawai ${nip}: ${err}</span>`);
+  }
+}
 
 // Tutup dropdown tukar & ubah saat klik di luar
 document.addEventListener('click', e=>{
