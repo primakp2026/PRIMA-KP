@@ -304,6 +304,48 @@
     .jadwal-week-table td.td-today{background:rgba(0,201,167,0.05);}
     .jadwal-legend-wrap{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;padding:12px 16px;background:white;border-radius:12px;border:1px solid #edf0f8;}
     .jadwal-legend-chip{border-radius:100px;padding:3px 10px;font-size:0.72rem;font-weight:600;}
+
+    /* ── PENGAJUAN WFH ── */
+    .pengajuan-card{background:white;border-radius:16px;padding:18px 20px;box-shadow:0 2px 12px rgba(10,22,40,0.05);border:1.5px solid #edf0f8;margin-bottom:10px;}
+    .pengajuan-card.pengajuan-pending{border-left:4px solid var(--gold);}
+    .pengajuan-card.pengajuan-approved{border-left:4px solid var(--mint);}
+    .pengajuan-card.pengajuan-rejected{border-left:4px solid var(--coral);}
+    .pengajuan-status-badge{display:inline-flex;align-items:center;gap:4px;border-radius:100px;padding:3px 10px;font-size:0.7rem;font-weight:700;}
+    .badge-pending{background:#fff8e1;color:#b7770d;}
+    .badge-approved{background:#e8faf5;color:#00875a;}
+    .badge-rejected{background:#fff0f0;color:#e53e3e;}
+    .btn-approve{background:rgba(0,201,167,0.12);border:1.5px solid rgba(0,201,167,0.4);color:#00875a;border-radius:8px;padding:6px 14px;font-size:0.75rem;font-weight:700;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;transition:all 0.2s;}
+    .btn-approve:hover{background:rgba(0,201,167,0.22);}
+    .btn-reject{background:rgba(255,107,107,0.1);border:1.5px solid rgba(255,107,107,0.3);color:#e53e3e;border-radius:8px;padding:6px 14px;font-size:0.75rem;font-weight:700;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;transition:all 0.2s;}
+    .btn-reject:hover{background:rgba(255,107,107,0.2);}
+    .pengajuan-meta{font-size:0.75rem;color:var(--text-dim);margin-top:4px;}
+    .pengajuan-type-badge{display:inline-flex;align-items:center;gap:4px;background:#f0f3ff;color:var(--navy);border-radius:100px;padding:3px 10px;font-size:0.7rem;font-weight:700;}
+    .pengajuan-type-badge.type-ubah{background:#e8f4fd;color:#0369a1;}
+    .pengajuan-type-badge.type-tukar{background:#fef3c7;color:#92400e;}
+    .empty-pengajuan{text-align:center;color:var(--text-dim);padding:40px 0;font-size:0.88rem;}
+
+    /* Tab pengajuan di halaman pegawai */
+    .fab-pengajuan{position:fixed;bottom:28px;right:28px;background:var(--gold);color:var(--navy);border:none;border-radius:100px;padding:14px 22px;font-size:0.88rem;font-weight:800;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;box-shadow:0 8px 24px rgba(201,162,39,0.35);transition:all 0.2s;z-index:90;}
+    .fab-pengajuan:hover{transform:translateY(-2px);box-shadow:0 12px 28px rgba(201,162,39,0.45);}
+
+    /* Modal pengajuan */
+    .modal-overlay{position:fixed;inset:0;background:rgba(10,22,40,0.65);backdrop-filter:blur(6px);z-index:300;display:flex;align-items:center;justify-content:center;padding:20px;}
+    .modal-card{background:white;border-radius:24px;padding:36px;width:100%;max-width:500px;box-shadow:0 24px 48px rgba(10,22,40,0.2);max-height:90vh;overflow-y:auto;}
+    .modal-card h3{font-family:'DM Serif Display',serif;font-size:1.4rem;color:var(--navy);margin-bottom:6px;}
+    .modal-card .modal-sub{color:var(--text-dim);font-size:0.82rem;margin-bottom:24px;}
+    .modal-type-sel{display:flex;gap:8px;margin-bottom:20px;}
+    .modal-type-btn{flex:1;padding:12px;border:2px solid #e8ecf5;border-radius:12px;font-family:'Plus Jakarta Sans',sans-serif;font-size:0.82rem;font-weight:700;color:var(--navy);cursor:pointer;background:white;transition:all 0.15s;text-align:center;}
+    .modal-type-btn.selected{background:var(--navy);color:white;border-color:var(--navy);}
+    .modal-field{margin-bottom:16px;}
+    .modal-field label{display:block;font-size:0.7rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--navy-light);margin-bottom:8px;}
+    .modal-inp{width:100%;border:2px solid #e8ecf5;border-radius:10px;padding:11px 14px;font-size:0.88rem;font-family:'Plus Jakarta Sans',sans-serif;font-weight:600;color:var(--navy);outline:none;background:white;transition:border-color 0.2s;}
+    .modal-inp:focus{border-color:var(--gold);}
+    textarea.modal-inp{resize:vertical;min-height:72px;font-weight:400;}
+    .modal-actions{display:flex;gap:10px;margin-top:20px;}
+    .btn-modal-submit{flex:1;background:var(--navy);color:white;border:none;border-radius:12px;padding:14px;font-size:0.88rem;font-weight:700;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;transition:all 0.2s;}
+    .btn-modal-submit:hover{background:var(--navy-light);}
+    .btn-modal-cancel{background:none;border:1.5px solid #e2e7f3;border-radius:12px;padding:14px 20px;font-size:0.82rem;font-weight:600;color:var(--text-dim);cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;}
+    .notif-dot{position:absolute;top:-3px;right:-3px;width:8px;height:8px;background:#ef4444;border-radius:50%;}
   </style>
 </head>
 <body>
@@ -344,11 +386,16 @@
     </div>
     <div class="login-panel-right">
       <h3>Masuk ke Portal</h3>
-      <p class="sub">Gunakan NIP 18 digit Anda untuk mengakses jadwal WFH.</p>
+      <p class="sub">Gunakan NIP 18 digit dan password Anda untuk mengakses jadwal WFH.</p>
       <div class="field-label">Nomor Induk Pegawai (NIP)</div>
-      <input type="tel" id="nip-inp" class="nip-input" placeholder="18 digit NIP Anda" maxlength="18" onkeydown="if(event.key==='Enter')handleLogin()">
+      <input type="tel" id="nip-inp" class="nip-input" placeholder="18 digit NIP Anda" maxlength="18" onkeydown="if(event.key==='Enter')document.getElementById('pass-inp').focus()">
+      <div class="field-label">Password</div>
+      <div style="position:relative;margin-bottom:16px;">
+        <input type="password" id="pass-inp" class="nip-input" style="margin-bottom:0;padding-right:48px;" placeholder="Masukkan password" onkeydown="if(event.key==='Enter')handleLogin()">
+        <button onclick="togglePassVis()" style="position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text-dim);font-size:1rem;" id="btn-pass-eye">👁️</button>
+      </div>
       <button class="btn-login" onclick="handleLogin()">MASUK KE PORTAL →</button>
-      <div class="kmk-note"><strong>Ketentuan:</strong> Kuota WFH maks. 20% pegawai per hari · 1 hari WFH per minggu · Dilarang WFH saat ada hari libur nasional di minggu tersebut.</div>
+      <div class="kmk-note"><strong>Ketentuan:</strong> Kuota WFH maks. 20% pegawai per hari · 1 hari WFH per minggu · Dilarang WFH saat ada hari libur nasional di minggu tersebut.<br><br>💡 <em>Password default: 8 digit terakhir NIP Anda. Hubungi admin jika lupa password.</em></div>
     </div>
   </div>
 </div>
@@ -367,6 +414,7 @@
         <div><div class="user-name-bar" id="u-nama">-</div><div class="user-nip-bar" id="u-nip">-</div></div>
       </div>
       <button class="btn-tb btn-admin-top" onclick="goAdmin()">⚙️ Admin</button>
+      <button class="btn-tb" onclick="openModalGantiPass()" style="background:rgba(0,201,167,0.15);border-color:rgba(0,201,167,0.3);color:#00c9a7;">🔑 Ganti Password</button>
       <button class="btn-tb btn-logout" onclick="logout()">Keluar</button>
     </div>
   </div>
@@ -396,6 +444,7 @@
       <button class="tab-btn" onclick="switchTab('jadwal-rekan')">👥 Jadwal Rekan</button>
       <button class="tab-btn" onclick="switchTab('jadwal-harian')">🗓️ Harian</button>
       <button class="tab-btn" onclick="switchTab('jadwal-mingguan')">📊 Mingguan</button>
+      <button class="tab-btn" onclick="switchTab('pengajuan-saya')" id="tab-btn-pengajuan" style="position:relative;">📝 Pengajuan<span id="notif-dot-pengajuan" class="notif-dot" style="display:none;"></span></button>
     </div>
 
     <!-- TAB: JADWAL SAYA -->
@@ -464,6 +513,109 @@
         <span class="jadwal-legend-chip chip-izin">IZIN</span>
         <span class="jadwal-legend-chip chip-wfo">WFO</span>
       </div>
+    </div>
+
+    <!-- TAB: PENGAJUAN SAYA -->
+    <div id="tab-pengajuan-saya" class="tab-pane">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+        <div>
+          <div style="font-size:1rem;font-weight:700;color:var(--navy);">Pengajuan Perubahan / Pertukaran WFH</div>
+          <div style="font-size:0.78rem;color:var(--text-dim);margin-top:3px;">Status pengajuan Anda kepada admin. Admin akan memproses dalam waktu 1x24 jam kerja.</div>
+        </div>
+        <button onclick="openModalPengajuan()" style="background:var(--navy);color:white;border:none;border-radius:12px;padding:10px 20px;font-size:0.82rem;font-weight:700;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;">➕ Ajukan Perubahan</button>
+      </div>
+      <div id="pengajuan-saya-list"><div class="empty-pengajuan">⏳ Memuat data pengajuan...</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL GANTI PASSWORD PEGAWAI -->
+<div id="modal-ganti-pass" class="modal-overlay" style="display:none;">
+  <div class="modal-card" style="max-width:420px;">
+    <h3>🔑 Ganti Password</h3>
+    <p class="modal-sub">Password baru akan langsung terenkripsi. Admin <strong>tidak dapat</strong> melihat password Anda.</p>
+    <div class="modal-field">
+      <label>Password Saat Ini</label>
+      <div style="position:relative;">
+        <input type="password" id="gp-pass-lama" class="modal-inp" placeholder="Masukkan password saat ini" style="padding-right:44px;">
+        <button onclick="toggleGpVis('gp-pass-lama','eye-lama')" id="eye-lama" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:1rem;color:var(--text-dim);">👁️</button>
+      </div>
+    </div>
+    <div class="modal-field">
+      <label>Password Baru</label>
+      <div style="position:relative;">
+        <input type="password" id="gp-pass-baru" class="modal-inp" placeholder="Minimal 6 karakter" style="padding-right:44px;" oninput="checkPassStrength()">
+        <button onclick="toggleGpVis('gp-pass-baru','eye-baru')" id="eye-baru" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:1rem;color:var(--text-dim);">👁️</button>
+      </div>
+      <!-- Strength bar -->
+      <div id="gp-strength-wrap" style="margin-top:8px;display:none;">
+        <div style="height:4px;background:#e2e7f3;border-radius:100px;overflow:hidden;">
+          <div id="gp-strength-bar" style="height:4px;border-radius:100px;transition:width 0.3s,background 0.3s;width:0%;"></div>
+        </div>
+        <div id="gp-strength-label" style="font-size:0.7rem;margin-top:4px;color:var(--text-dim);"></div>
+      </div>
+    </div>
+    <div class="modal-field">
+      <label>Konfirmasi Password Baru</label>
+      <div style="position:relative;">
+        <input type="password" id="gp-pass-konfirm" class="modal-inp" placeholder="Ulangi password baru" style="padding-right:44px;">
+        <button onclick="toggleGpVis('gp-pass-konfirm','eye-konfirm')" id="eye-konfirm" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:1rem;color:var(--text-dim);">👁️</button>
+      </div>
+    </div>
+    <div id="gp-status" style="font-size:0.8rem;min-height:20px;margin-bottom:4px;"></div>
+    <div class="modal-actions">
+      <button class="btn-modal-cancel" onclick="closeModalGantiPass()">Batal</button>
+      <button class="btn-modal-submit" onclick="doGantiPassword()">🔐 Simpan Password Baru</button>
+    </div>
+    <div style="margin-top:16px;padding:12px 14px;background:#f0fdf4;border-radius:10px;border:1px solid #86efac;font-size:0.75rem;color:#166534;">
+      🛡️ <strong>Keamanan:</strong> Password Anda dienkripsi menggunakan SHA-256 sebelum disimpan. Bahkan admin sistem tidak dapat mengetahui password Anda.
+    </div>
+  </div>
+</div>
+<div id="modal-pengajuan" class="modal-overlay" style="display:none;">
+  <div class="modal-card">
+    <h3>Ajukan Perubahan WFH</h3>
+    <p class="modal-sub">Pengajuan akan diproses oleh admin. Anda akan melihat statusnya di tab Pengajuan.</p>
+    <div class="modal-type-sel">
+      <button class="modal-type-btn selected" id="mtype-ubah" onclick="setModalType('ubah')">✏️ Ubah Tanggal WFH</button>
+      <button class="modal-type-btn" id="mtype-tukar" onclick="setModalType('tukar')">🔄 Tukar dengan Rekan</button>
+    </div>
+    <!-- Form Ubah -->
+    <div id="modal-form-ubah">
+      <div class="modal-field">
+        <label>Tanggal WFH Saya yang Ingin Diubah</label>
+        <select id="m-tgl-lama" class="modal-inp"></select>
+      </div>
+      <div class="modal-field">
+        <label>Tanggal Baru yang Diinginkan</label>
+        <input type="date" id="m-tgl-baru" class="modal-inp">
+      </div>
+    </div>
+    <!-- Form Tukar -->
+    <div id="modal-form-tukar" style="display:none;">
+      <div class="modal-field">
+        <label>Tanggal WFH Saya yang Akan Ditukar</label>
+        <select id="m-tgl-saya" class="modal-inp"></select>
+      </div>
+      <div class="modal-field">
+        <label>Nama / NIP Rekan yang Diajak Tukar</label>
+        <div class="tukar-search-wrap">
+          <input type="text" id="m-rekan-inp" class="modal-inp" placeholder="Cari nama atau NIP rekan..." oninput="mRekanSearch()" onfocus="mRekanSearch()" autocomplete="off">
+          <div class="tukar-dropdown" id="m-rekan-drop"></div>
+        </div>
+        <div id="m-rekan-card" style="display:none;background:#f5f7fc;border:1.5px solid #e2e7f3;border-radius:10px;padding:10px 14px;margin-top:8px;">
+          <div id="m-rekan-nama" style="font-size:0.88rem;font-weight:700;color:var(--navy);"></div>
+          <div id="m-rekan-tgl-info" style="font-size:0.75rem;color:var(--text-dim);margin-top:2px;"></div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-field">
+      <label>Alasan / Keterangan</label>
+      <textarea id="m-alasan" class="modal-inp" placeholder="Jelaskan alasan pengajuan Anda..."></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-modal-cancel" onclick="closeModalPengajuan()">Batal</button>
+      <button class="btn-modal-submit" onclick="submitPengajuan()">📨 Kirim Pengajuan</button>
     </div>
   </div>
 </div>
@@ -760,6 +912,10 @@
             <label>Tim Kerja / Jabatan <span style="font-weight:400;color:var(--text-dim);">(opsional)</span></label>
             <input type="text" id="peg-tim-inp" class="config-inp" placeholder="Contoh: Subbagian TU">
           </div>
+          <div class="config-field">
+            <label>Password <span style="font-weight:400;color:var(--text-dim);">(kosongkan = default 8 digit akhir NIP)</span></label>
+            <input type="text" id="peg-pass-inp" class="config-inp" placeholder="Biarkan kosong untuk password default">
+          </div>
         </div>
         <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
           <button class="btn-save" onclick="tambahPegawai()" id="btn-peg-tambah">➕ Tambah Pegawai</button>
@@ -775,6 +931,48 @@
         </div>
         <div id="peg-list-wrap">
           <div style="color:var(--text-dim);font-size:0.83rem;padding:16px 0;">Klik <strong>Muat Ulang</strong> untuk memuat daftar pegawai.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ SEKSI: KELOLA PENGAJUAN PERUBAHAN WFH ══ -->
+    <div class="admin-section" id="seksi-pengajuan">
+      <h4>📝 Kelola Pengajuan Perubahan / Pertukaran WFH</h4>
+      <div style="font-size:0.8rem;color:var(--text-dim);margin-bottom:18px;">
+        Tinjau dan proses pengajuan dari pegawai. Setujui atau tolak setiap pengajuan dengan catatan.
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
+        <button onclick="loadPengajuanAdmin('pending')" id="filter-pending" class="tab-btn active" style="font-size:0.78rem;padding:8px 16px;">⏳ Menunggu <span id="badge-pending-count" style="background:#ef4444;color:white;border-radius:100px;padding:1px 7px;font-size:0.68rem;margin-left:4px;display:none;"></span></button>
+        <button onclick="loadPengajuanAdmin('approved')" id="filter-approved" class="tab-btn" style="font-size:0.78rem;padding:8px 16px;">✅ Disetujui</button>
+        <button onclick="loadPengajuanAdmin('rejected')" id="filter-rejected" class="tab-btn" style="font-size:0.78rem;padding:8px 16px;">❌ Ditolak</button>
+        <button onclick="loadPengajuanAdmin('all')" id="filter-all" class="tab-btn" style="font-size:0.78rem;padding:8px 16px;">📋 Semua</button>
+      </div>
+      <div id="pengajuan-admin-list"><div class="empty-pengajuan">⏳ Memuat data...</div></div>
+    </div>
+
+    <!-- ══ SEKSI: RESET PASSWORD PEGAWAI ══ -->
+    <div class="admin-section">
+      <h4>🔑 Reset Password Pegawai</h4>
+      <div style="font-size:0.8rem;color:var(--text-dim);margin-bottom:16px;">Reset password pegawai ke nilai baru. Pegawai akan menggunakan password baru saat login berikutnya.</div>
+      <div class="ubah-step">
+        <div class="ubah-step-label">① Pilih Pegawai</div>
+        <div class="tukar-search-wrap">
+          <input type="text" id="reset-peg-inp" class="tukar-search-inp" placeholder="Cari nama atau NIP..." oninput="resetPegSearch()" onfocus="resetPegSearch()" autocomplete="off">
+          <div class="tukar-dropdown" id="reset-peg-drop"></div>
+        </div>
+        <div class="tukar-selected-card" id="reset-peg-card">
+          <div class="tukar-sc-nama" id="reset-peg-nama">—</div>
+        </div>
+      </div>
+      <div id="reset-step2" style="display:none;">
+        <div class="ubah-step">
+          <div class="ubah-step-label">② Password Baru</div>
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+            <input type="text" id="reset-pass-new" class="config-inp" style="max-width:260px;" placeholder="Masukkan password baru">
+            <button onclick="doResetPassword()" class="btn-save">🔑 Simpan Password</button>
+            <button onclick="doResetPasswordDefault()" class="btn-save" style="background:#6b7a99;">↩️ Reset ke Default (8 digit NIP)</button>
+          </div>
+          <div id="reset-pass-status" class="config-status" style="margin-top:8px;"></div>
         </div>
       </div>
     </div>
@@ -1022,8 +1220,8 @@ function tick() {
       rb.style.color = '#1e40af';
       const tglBuka = getCfg('tgl_buka', TGL_BUKA);
       const pesan = forceViewOnly
-        ? '👁️ <strong>Mode Lihat Saja (Diaktifkan Admin)</strong> — Portal sedang dalam mode lihat saja. Anda hanya dapat melihat jadwal WFH.'
-        : '👁️ <strong>Mode Lihat Saja</strong> — Periode pengisian telah ditutup. Anda dapat melihat jadwal WFH namun tidak dapat mengubahnya. Pengisian dibuka kembali tgl '+tglBuka+'.';
+        ? '👁️ <strong>Mode Lihat Saja (Diaktifkan Admin)</strong> — Portal sedang dalam mode lihat saja. Anda hanya dapat melihat jadwal WFH. Namun Anda tetap bisa mengajukan perubahan/pertukaran WFH melalui tab 📝 Pengajuan.'
+        : '👁️ <strong>Mode Lihat Saja</strong> — Periode pengisian telah ditutup. Anda tidak dapat mengubah jadwal WFH secara langsung. Untuk perubahan, gunakan tab 📝 <strong>Pengajuan</strong>. Pengisian langsung dibuka kembali tgl '+tglBuka+'.';
       if (rt) rt.innerHTML = pesan;
     } else {
       rb.style.background = ''; rb.style.borderColor = ''; rb.style.borderLeftColor = ''; rb.style.color = '';
@@ -1053,17 +1251,60 @@ function setTimer(ms) {
 /* ══════════════════════════════════════════════
    LOGIN
    ══════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════
+   ENKRIPSI PASSWORD — SHA-256 (Web Crypto API)
+   Password SELALU di-hash sebelum disimpan ke DB.
+   Admin tidak bisa melihat password asli pegawai.
+   ══════════════════════════════════════════════ */
+async function sha256(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
 async function handleLogin() {
   const nip=document.getElementById('nip-inp').value.trim();
+  const pass=document.getElementById('pass-inp').value;
   if(nip.length<18) return swal('NIP Tidak Valid','NIP harus 18 digit.','error');
+  if(!pass) return swal('Password Kosong','Masukkan password Anda.','error');
   showLoad(true);
-  const {data,ok}=await db.from('pegawai').sel('nip,nama').eq('nip',nip).lim(1).get();
+  const {data,ok}=await db.from('pegawai').sel('nip,nama,password').eq('nip',nip).lim(1).get();
   showLoad(false);
   if(!ok||!data||!data.length) return swal('Tidak Ditemukan','NIP tidak terdaftar di sistem.','error');
+
+  const stored = data[0].password;
+  let valid = false;
+  if(!stored) {
+    // Belum punya password → default 8 digit terakhir NIP (plaintext fallback, sekali saja)
+    valid = (pass === nip.slice(-8));
+    if(valid) {
+      // Langsung upgrade simpan hash ke DB secara silent
+      const hashed = await sha256(pass);
+      await db.from('pegawai').eq('nip',nip).patch({password: hashed});
+    }
+  } else if(stored.length === 64) {
+    // Sudah berupa hash SHA-256 → bandingkan hash
+    const hashed = await sha256(pass);
+    valid = (hashed === stored);
+  } else {
+    // Masih plaintext lama → bandingkan langsung lalu upgrade ke hash
+    valid = (pass === stored);
+    if(valid) {
+      const hashed = await sha256(pass);
+      await db.from('pegawai').eq('nip',nip).patch({password: hashed});
+    }
+  }
+
+  if(!valid) return swal('Password Salah','Password yang Anda masukkan tidak tepat.','error');
   S.nip=nip; S.nama=data[0].nama||'';
   sessionStorage.setItem('wfh_nip',nip); sessionStorage.setItem('wfh_nama',S.nama);
-  console.log('Login OK:', S.nip, S.nama);
   setUserBar(); initCal(); showPage('page-calendar');
+}
+
+function togglePassVis(){
+  const inp=document.getElementById('pass-inp');
+  const btn=document.getElementById('btn-pass-eye');
+  if(inp.type==='password'){inp.type='text';btn.textContent='🙈';}
+  else{inp.type='password';btn.textContent='👁️';}
 }
 
 function logout(){
@@ -1427,7 +1668,7 @@ function adminFromCountdown(){
   document.getElementById('pin-overlay').style.display = S.pinOK ? 'none' : 'flex';
   if(!S.pinOK){ document.getElementById('pin-inp').value = ''; setTimeout(()=>document.getElementById('pin-inp').focus(), 200); }
   showPage('page-admin');
-  if(S.pinOK){ loadAdminConfig(); loadViewOnlyState(); initUbahData().then(initTukar); }
+  if(S.pinOK){ loadAdminConfig(); loadViewOnlyState(); initUbahData().then(initTukar); loadPengajuanAdmin('pending'); }
 }
 
 function goAdmin(){
@@ -1445,7 +1686,7 @@ function goAdmin(){
   document.getElementById('pin-overlay').style.display=S.pinOK?'none':'flex';
   if(!S.pinOK){document.getElementById('pin-inp').value='';setTimeout(()=>document.getElementById('pin-inp').focus(),200);}
   showPage('page-admin');
-  if(S.pinOK){ loadAdminConfig(); loadViewOnlyState(); initUbahData().then(initTukar); }
+  if(S.pinOK){ loadAdminConfig(); loadViewOnlyState(); initUbahData().then(initTukar); loadPengajuanAdmin('pending'); }
 }
 
 async function loadAdminConfig(){
@@ -2211,6 +2452,7 @@ function verifyPin(){
     loadAdminConfig();
     loadViewOnlyState();
     initUbahData().then(initTukar);
+    loadPengajuanAdmin('pending');
   } else {
     document.getElementById('pin-inp').value='';
     document.getElementById('pin-inp').style.borderColor='#ff6b6b';
@@ -2611,6 +2853,7 @@ function switchTab(name) {
       renderJadwalMingguan();
     }).catch(()=>{});
   }
+  if(name==='pengajuan-saya') loadPengajuanSaya();
 }
 
 function showPage(id){
@@ -2620,9 +2863,21 @@ function showPage(id){
 function showLoad(b){ document.getElementById('loading').classList.toggle('show',b); }
 function swal(t,txt,i){ return Swal.fire({title:t,text:txt,icon:i,confirmButtonColor:'#0a1628'}); }
 function fmtTgl(ds){ const d=new Date(ds); return d.getDate()+' '+BULAN[d.getMonth()]+' '+d.getFullYear(); }
+function fmt(ds){ return fmtTgl(ds); }
 function getSenin(d){ const s=new Date(d);s.setHours(0,0,0,0);const wd=s.getDay();s.setDate(s.getDate()-wd+(wd===0?-6:1));return s; }
 function isoWeek(d){ const dt=new Date(d.getTime());dt.setHours(0,0,0,0);dt.setDate(dt.getDate()+3-(dt.getDay()+6)%7);const w1=new Date(dt.getFullYear(),0,4);return 1+Math.round(((dt-w1)/86400000-3+(w1.getDay()+6)%7)/7); }
-function alog(t,m){ const b=document.getElementById('alog');const l=document.createElement('div');l.className='log-'+t;l.textContent='['+new Date().toLocaleTimeString('id-ID')+'] '+m;b.appendChild(l);b.scrollTop=b.scrollHeight; }
+function alog(t,m){ 
+  const b=document.getElementById('alog');
+  const l=document.createElement('div');
+  if(m===undefined){
+    // Legacy single-arg call with HTML string
+    l.innerHTML='['+new Date().toLocaleTimeString('id-ID')+'] '+t;
+  } else {
+    l.className='log-'+t;
+    l.textContent='['+new Date().toLocaleTimeString('id-ID')+'] '+m;
+  }
+  b.appendChild(l);b.scrollTop=b.scrollHeight; 
+}
 function setAdminBtns(dis){ document.querySelectorAll('#page-admin .btn-acard,.btn-primary').forEach(b=>b.disabled=dis); }
 
 /* ══════════════════════════════════════════════
@@ -3039,6 +3294,7 @@ async function tambahPegawai(){
   const nip  = document.getElementById('peg-nip-inp').value.trim();
   const nama = document.getElementById('peg-nama-inp').value.trim();
   const tim  = document.getElementById('peg-tim-inp').value.trim();
+  const pass = document.getElementById('peg-pass-inp').value.trim();
   const status = document.getElementById('peg-tambah-status');
 
   if(nip.length !== 18){ status.style.color='#e53e3e'; status.textContent='⚠️ NIP harus tepat 18 digit.'; return; }
@@ -3054,6 +3310,9 @@ async function tambahPegawai(){
 
   const row = { nip, nama };
   if(tim) row.tim_kerja = tim;
+  // Hash password sebelum disimpan — admin tidak bisa melihat isi aslinya
+  const rawPass = pass || nip.slice(-8);
+  row.password = await sha256(rawPass);
 
   const res = await db.from('pegawai').ins(row);
   btn.disabled=false;
@@ -3064,6 +3323,7 @@ async function tambahPegawai(){
     document.getElementById('peg-nip-inp').value='';
     document.getElementById('peg-nama-inp').value='';
     document.getElementById('peg-tim-inp').value='';
+    document.getElementById('peg-pass-inp').value='';
     S.pegawaiAll.push({nip,nama,tim_kerja:tim||''});
     S.totalPeg++;
     document.getElementById('s-total').textContent=S.totalPeg;
@@ -3162,7 +3422,365 @@ document.addEventListener('click', e=>{
   if(ubahWrap && !ubahWrap.contains(e.target)){
     document.getElementById('ubah-peg-drop')?.classList.remove('show');
   }
+  // Modal rekan search
+  const mRekanWrap = document.getElementById('m-rekan-inp')?.closest('.tukar-search-wrap');
+  if(mRekanWrap && !mRekanWrap.contains(e.target)){
+    document.getElementById('m-rekan-drop')?.classList.remove('show');
+  }
+  // Reset peg search
+  const resetWrap = document.getElementById('reset-peg-inp')?.closest('.tukar-search-wrap');
+  if(resetWrap && !resetWrap.contains(e.target)){
+    document.getElementById('reset-peg-drop')?.classList.remove('show');
+  }
 });
+
+/* ══════════════════════════════════════════════
+   GANTI PASSWORD OLEH PEGAWAI
+   ══════════════════════════════════════════════ */
+function openModalGantiPass(){
+  document.getElementById('gp-pass-lama').value='';
+  document.getElementById('gp-pass-baru').value='';
+  document.getElementById('gp-pass-konfirm').value='';
+  document.getElementById('gp-status').textContent='';
+  document.getElementById('gp-strength-wrap').style.display='none';
+  document.getElementById('modal-ganti-pass').style.display='flex';
+}
+function closeModalGantiPass(){
+  document.getElementById('modal-ganti-pass').style.display='none';
+}
+function toggleGpVis(inputId, btnId){
+  const inp=document.getElementById(inputId);
+  const btn=document.getElementById(btnId);
+  if(inp.type==='password'){inp.type='text';btn.textContent='🙈';}
+  else{inp.type='password';btn.textContent='👁️';}
+}
+function checkPassStrength(){
+  const v = document.getElementById('gp-pass-baru').value;
+  const wrap = document.getElementById('gp-strength-wrap');
+  const bar  = document.getElementById('gp-strength-bar');
+  const lbl  = document.getElementById('gp-strength-label');
+  if(!v){ wrap.style.display='none'; return; }
+  wrap.style.display='block';
+  let score=0;
+  if(v.length>=6) score++;
+  if(v.length>=10) score++;
+  if(/[A-Z]/.test(v)) score++;
+  if(/[0-9]/.test(v)) score++;
+  if(/[^A-Za-z0-9]/.test(v)) score++;
+  const levels=[
+    {w:'20%',bg:'#ef4444',t:'Sangat Lemah'},
+    {w:'40%',bg:'#f97316',t:'Lemah'},
+    {w:'60%',bg:'#eab308',t:'Sedang'},
+    {w:'80%',bg:'#84cc16',t:'Kuat'},
+    {w:'100%',bg:'#22c55e',t:'Sangat Kuat'},
+  ];
+  const lv=levels[Math.min(score,4)];
+  bar.style.width=lv.w; bar.style.background=lv.bg;
+  lbl.textContent=lv.t; lbl.style.color=lv.bg;
+}
+async function doGantiPassword(){
+  const passLama    = document.getElementById('gp-pass-lama').value;
+  const passBaru    = document.getElementById('gp-pass-baru').value;
+  const passKonfirm = document.getElementById('gp-pass-konfirm').value;
+  const st = document.getElementById('gp-status');
+
+  if(!passLama){ st.style.color='#e53e3e'; st.textContent='⚠️ Masukkan password saat ini.'; return; }
+  if(passBaru.length<6){ st.style.color='#e53e3e'; st.textContent='⚠️ Password baru minimal 6 karakter.'; return; }
+  if(passBaru!==passKonfirm){ st.style.color='#e53e3e'; st.textContent='⚠️ Konfirmasi password tidak cocok.'; return; }
+
+  st.style.color='var(--text-dim)'; st.textContent='⏳ Memverifikasi...';
+
+  // Ambil data pegawai untuk verifikasi password lama
+  const {data,ok} = await db.from('pegawai').sel('password').eq('nip',S.nip).lim(1).get();
+  if(!ok||!data||!data.length){ st.style.color='#e53e3e'; st.textContent='❌ Gagal memuat data akun.'; return; }
+
+  const stored = data[0].password;
+  let valid = false;
+  if(!stored) {
+    valid = (passLama === S.nip.slice(-8));
+  } else if(stored.length===64) {
+    valid = ((await sha256(passLama)) === stored);
+  } else {
+    valid = (passLama === stored);
+  }
+
+  if(!valid){ st.style.color='#e53e3e'; st.textContent='❌ Password saat ini tidak tepat.'; return; }
+
+  st.textContent='🔐 Mengenkripsi dan menyimpan...';
+  const hashed = await sha256(passBaru);
+  const res = await db.from('pegawai').eq('nip',S.nip).patch({password: hashed});
+  if(res.ok){
+    closeModalGantiPass();
+    await Swal.fire({
+      title:'Password Berhasil Diubah! 🔐',
+      html:'Password Anda telah diperbarui dan <strong>disimpan secara terenkripsi</strong>.<br>Gunakan password baru saat login berikutnya.',
+      icon:'success', confirmButtonColor:'#0a1628'
+    });
+  } else {
+    st.style.color='#e53e3e'; st.textContent='❌ Gagal menyimpan: '+(res.err||'Error');
+  }
+}
+
+/* ══════════════════════════════════════════════
+   PENGAJUAN PERUBAHAN / PERTUKARAN WFH
+   ══════════════════════════════════════════════ */
+
+let _mType = 'ubah';
+let _mRekanNip = '';
+
+function setModalType(type){
+  _mType = type;
+  document.getElementById('mtype-ubah').className = 'modal-type-btn'+(type==='ubah'?' selected':'');
+  document.getElementById('mtype-tukar').className = 'modal-type-btn'+(type==='tukar'?' selected':'');
+  document.getElementById('modal-form-ubah').style.display = type==='ubah'?'block':'none';
+  document.getElementById('modal-form-tukar').style.display = type==='tukar'?'block':'none';
+}
+
+async function openModalPengajuan(){
+  // Populate jadwal WFH saya
+  const myWfh = S.wfhAll.filter(w=>w.nip===S.nip && (!w.kode_absensi || w.kode_absensi==='WFH'));
+  const optHtml = myWfh.length
+    ? myWfh.map(w=>`<option value="${w.tanggal_wfh}">${fmt(w.tanggal_wfh)}</option>`).join('')
+    : '<option value="">Tidak ada jadwal WFH</option>';
+  document.getElementById('m-tgl-lama').innerHTML = optHtml;
+  document.getElementById('m-tgl-saya').innerHTML = optHtml;
+  document.getElementById('m-alasan').value = '';
+  document.getElementById('m-tgl-baru').value = '';
+  _mRekanNip = '';
+  document.getElementById('m-rekan-inp').value = '';
+  document.getElementById('m-rekan-card').style.display = 'none';
+  setModalType('ubah');
+  document.getElementById('modal-pengajuan').style.display = 'flex';
+}
+
+function closeModalPengajuan(){
+  document.getElementById('modal-pengajuan').style.display = 'none';
+}
+
+function mRekanSearch(){
+  const q = document.getElementById('m-rekan-inp').value.toLowerCase();
+  const drop = document.getElementById('m-rekan-drop');
+  const list = S.pegawaiAll.filter(p=>p.nip!==S.nip && (p.nama.toLowerCase().includes(q)||p.nip.includes(q))).slice(0,8);
+  if(!list.length||!q){ drop.classList.remove('show'); return; }
+  drop.innerHTML = list.map(p=>`
+    <div class="tukar-opt" onclick="selectMRekan('${p.nip}','${p.nama.replace(/'/g,"\\'")}')">
+      ${p.nama}<div class="opt-sub">${p.nip}${p.tim_kerja?' · '+p.tim_kerja:''}</div>
+    </div>`).join('');
+  drop.classList.add('show');
+}
+
+function selectMRekan(nip, nama){
+  _mRekanNip = nip;
+  document.getElementById('m-rekan-inp').value = nama;
+  document.getElementById('m-rekan-drop').classList.remove('show');
+  // Tampilkan WFH rekan
+  const rekanWfh = S.wfhAll.filter(w=>w.nip===nip && (!w.kode_absensi||w.kode_absensi==='WFH'));
+  const card = document.getElementById('m-rekan-card');
+  card.style.display = 'block';
+  document.getElementById('m-rekan-nama').textContent = nama;
+  document.getElementById('m-rekan-tgl-info').textContent = rekanWfh.length
+    ? 'Jadwal WFH: '+rekanWfh.map(w=>fmt(w.tanggal_wfh)).join(', ')
+    : 'Tidak ada jadwal WFH terdaftar';
+}
+
+async function submitPengajuan(){
+  const alasan = document.getElementById('m-alasan').value.trim();
+  if(!alasan) return swal('Keterangan Kosong','Mohon isi alasan pengajuan.','warning');
+
+  let payload = {
+    nip: S.nip,
+    nama: S.nama,
+    jenis: _mType,
+    alasan,
+    status: 'pending',
+    created_at: new Date().toISOString(),
+  };
+
+  if(_mType === 'ubah'){
+    const tglLama = document.getElementById('m-tgl-lama').value;
+    const tglBaru = document.getElementById('m-tgl-baru').value;
+    if(!tglLama) return swal('Pilih Tanggal','Pilih tanggal WFH yang ingin diubah.','warning');
+    if(!tglBaru) return swal('Tanggal Baru Kosong','Masukkan tanggal baru yang diinginkan.','warning');
+    payload.tgl_lama = tglLama;
+    payload.tgl_baru = tglBaru;
+    payload.detail = `Ubah WFH dari ${fmt(tglLama)} → ${fmt(tglBaru)}`;
+  } else {
+    const tglSaya = document.getElementById('m-tgl-saya').value;
+    if(!tglSaya) return swal('Pilih Tanggal','Pilih tanggal WFH Anda yang akan ditukar.','warning');
+    if(!_mRekanNip) return swal('Pilih Rekan','Cari dan pilih rekan yang ingin diajak tukar.','warning');
+    const rekanNama = document.getElementById('m-rekan-inp').value;
+    payload.tgl_lama = tglSaya;
+    payload.rekan_nip = _mRekanNip;
+    payload.rekan_nama = rekanNama;
+    payload.detail = `Tukar WFH ${fmt(tglSaya)} dengan ${rekanNama}`;
+  }
+
+  showLoad(true);
+  const res = await db.from('pengajuan_wfh').ins(payload);
+  showLoad(false);
+  if(res.ok){
+    closeModalPengajuan();
+    swal('Pengajuan Terkirim','Pengajuan Anda telah dikirim ke admin. Pantau statusnya di tab Pengajuan.','success');
+    loadPengajuanSaya();
+  } else {
+    swal('Gagal','Gagal mengirim pengajuan: '+(res.err||'Error'),'error');
+  }
+}
+
+async function loadPengajuanSaya(){
+  const wrap = document.getElementById('pengajuan-saya-list');
+  if(!wrap) return;
+  wrap.innerHTML = '<div class="empty-pengajuan">⏳ Memuat...</div>';
+  const {data,ok} = await db.from('pengajuan_wfh').sel('*').eq('nip',S.nip).ord('created_at',false).get();
+  if(!ok){ wrap.innerHTML='<div class="empty-pengajuan">❌ Gagal memuat data.</div>'; return; }
+  const list = data||[];
+  if(!list.length){ wrap.innerHTML='<div class="empty-pengajuan">Belum ada pengajuan. Klik <strong>Ajukan Perubahan</strong> untuk memulai.</div>'; return; }
+  wrap.innerHTML = list.map(p=>`
+    <div class="pengajuan-card pengajuan-${p.status}">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;">
+        <div>
+          <span class="pengajuan-type-badge type-${p.jenis}">${p.jenis==='ubah'?'✏️ Ubah Tanggal':'🔄 Tukar Jadwal'}</span>
+          <div style="font-size:0.92rem;font-weight:700;color:var(--navy);margin-top:8px;">${p.detail||'—'}</div>
+          <div class="pengajuan-meta">Diajukan: ${new Date(p.created_at).toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'})}</div>
+          ${p.catatan_admin?`<div style="font-size:0.78rem;color:var(--text-dim);margin-top:6px;background:#f5f7fc;border-radius:8px;padding:6px 10px;">💬 Admin: ${p.catatan_admin}</div>`:''}
+          ${p.alasan?`<div style="font-size:0.78rem;color:var(--text-dim);margin-top:4px;">Alasan: ${p.alasan}</div>`:''}
+        </div>
+        <span class="pengajuan-status-badge ${p.status==='pending'?'badge-pending':p.status==='approved'?'badge-approved':'badge-rejected'}">
+          ${p.status==='pending'?'⏳ Menunggu':p.status==='approved'?'✅ Disetujui':'❌ Ditolak'}
+        </span>
+      </div>
+    </div>`).join('');
+  // Tampilkan notif dot jika ada yang pending
+  const pendingCount = list.filter(p=>p.status==='pending').length;
+  const dot = document.getElementById('notif-dot-pengajuan');
+  if(dot) dot.style.display = pendingCount>0?'block':'none';
+}
+
+/* ══ ADMIN: KELOLA PENGAJUAN ══ */
+let _adminPengajuanFilter = 'pending';
+
+async function loadPengajuanAdmin(filter){
+  _adminPengajuanFilter = filter||'pending';
+  ['pending','approved','rejected','all'].forEach(f=>{
+    const btn = document.getElementById('filter-'+f);
+    if(btn) btn.className='tab-btn'+(f===_adminPengajuanFilter?' active':'');
+  });
+  const wrap = document.getElementById('pengajuan-admin-list');
+  if(!wrap) return;
+  wrap.innerHTML='<div class="empty-pengajuan">⏳ Memuat...</div>';
+  let q = db.from('pengajuan_wfh').sel('*').ord('created_at',false);
+  if(filter && filter!=='all') q = q.eq('status', filter);
+  const {data,ok} = await q.get();
+  if(!ok){ wrap.innerHTML='<div class="empty-pengajuan">❌ Gagal memuat data.</div>'; return; }
+  const list = data||[];
+  if(!list.length){ wrap.innerHTML='<div class="empty-pengajuan">Tidak ada pengajuan.</div>'; return; }
+  // Update badge pending count
+  const pendingCountEl = document.getElementById('badge-pending-count');
+  if(pendingCountEl){
+    const pc = list.filter(p=>p.status==='pending').length;
+    if(filter==='all'||filter==='pending'){
+      pendingCountEl.textContent = pc;
+      pendingCountEl.style.display = pc>0?'inline':'none';
+    }
+  }
+  wrap.innerHTML = list.map(p=>`
+    <div class="pengajuan-card pengajuan-${p.status}">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;">
+        <div style="flex:1;">
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px;">
+            <span class="pengajuan-type-badge type-${p.jenis}">${p.jenis==='ubah'?'✏️ Ubah':'🔄 Tukar'}</span>
+            <span class="pengajuan-status-badge ${p.status==='pending'?'badge-pending':p.status==='approved'?'badge-approved':'badge-rejected'}">${p.status==='pending'?'⏳ Menunggu':p.status==='approved'?'✅ Disetujui':'❌ Ditolak'}</span>
+          </div>
+          <div style="font-size:0.92rem;font-weight:700;color:var(--navy);">${p.nama} <span style="font-size:0.72rem;font-weight:500;color:var(--text-dim);font-family:'Courier New',monospace;">${p.nip}</span></div>
+          <div style="font-size:0.82rem;color:var(--navy);margin-top:4px;">${p.detail||'—'}</div>
+          <div class="pengajuan-meta">Diajukan: ${new Date(p.created_at).toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'})}</div>
+          ${p.alasan?`<div style="font-size:0.78rem;color:var(--text-dim);margin-top:4px;">Alasan: ${p.alasan}</div>`:''}
+          ${p.catatan_admin?`<div style="font-size:0.78rem;color:var(--text-dim);margin-top:6px;background:#f5f7fc;border-radius:8px;padding:6px 10px;">💬 Catatan admin: ${p.catatan_admin}</div>`:''}
+        </div>
+        ${p.status==='pending'?`
+        <div style="display:flex;flex-direction:column;gap:6px;min-width:100px;">
+          <button class="btn-approve" onclick="prosesAdminPengajuan(${p.id},'approved')">✅ Setujui</button>
+          <button class="btn-reject" onclick="prosesAdminPengajuan(${p.id},'rejected')">❌ Tolak</button>
+        </div>`:''}
+      </div>
+    </div>`).join('');
+}
+
+async function prosesAdminPengajuan(id, status){
+  const isApprove = status==='approved';
+  const {value: catatan, isConfirmed} = await Swal.fire({
+    title: isApprove?'Setujui Pengajuan':'Tolak Pengajuan',
+    input: 'textarea',
+    inputLabel: 'Catatan untuk pegawai (opsional)',
+    inputPlaceholder: isApprove?'Contoh: Telah diproses, tanggal diubah sesuai permintaan.':'Contoh: Kuota sudah penuh, coba di hari lain.',
+    showCancelButton: true,
+    confirmButtonText: isApprove?'✅ Ya, Setujui':'❌ Ya, Tolak',
+    confirmButtonColor: isApprove?'#00875a':'#e53e3e',
+    cancelButtonColor: '#6b7a99',
+    cancelButtonText: 'Batal',
+  });
+  if(!isConfirmed) return;
+  showLoad(true);
+  const res = await db.from('pengajuan_wfh').eq('id',id).patch({
+    status,
+    catatan_admin: catatan||'',
+    processed_at: new Date().toISOString(),
+  });
+  showLoad(false);
+  if(res.ok){
+    swal('Berhasil','Pengajuan telah '+(isApprove?'disetujui':'ditolak')+'.','success');
+    alog(`<span class="log-ok">${isApprove?'✅':'❌'} Pengajuan ID ${id} ${isApprove?'disetujui':'ditolak'}</span>`);
+    loadPengajuanAdmin(_adminPengajuanFilter);
+  } else {
+    swal('Gagal','Gagal memproses: '+(res.err||'Error'),'error');
+  }
+}
+
+/* ══ RESET PASSWORD PEGAWAI ══ */
+let _resetPegNip = '';
+
+function resetPegSearch(){
+  const q = document.getElementById('reset-peg-inp').value.toLowerCase();
+  const drop = document.getElementById('reset-peg-drop');
+  const list = (S.pegawaiAll||[]).filter(p=>p.nama.toLowerCase().includes(q)||p.nip.includes(q)).slice(0,8);
+  if(!list.length||!q){ drop.classList.remove('show'); return; }
+  drop.innerHTML = list.map(p=>`
+    <div class="tukar-opt" onclick="selectResetPeg('${p.nip}','${p.nama.replace(/'/g,"\\'")}')">
+      ${p.nama}<div class="opt-sub">${p.nip}</div>
+    </div>`).join('');
+  drop.classList.add('show');
+}
+
+function selectResetPeg(nip, nama){
+  _resetPegNip = nip;
+  document.getElementById('reset-peg-inp').value = nama;
+  document.getElementById('reset-peg-drop').classList.remove('show');
+  document.getElementById('reset-peg-card').classList.add('show');
+  document.getElementById('reset-peg-nama').textContent = nama+' ('+nip+')';
+  document.getElementById('reset-step2').style.display = 'block';
+  document.getElementById('reset-pass-status').textContent = '';
+}
+
+async function doResetPassword(){
+  const newPass = document.getElementById('reset-pass-new').value.trim();
+  if(!newPass){ document.getElementById('reset-pass-status').style.color='#e53e3e'; document.getElementById('reset-pass-status').textContent='⚠️ Password baru tidak boleh kosong.'; return; }
+  if(!_resetPegNip) return;
+  const hashed = await sha256(newPass);
+  const res = await db.from('pegawai').eq('nip',_resetPegNip).patch({password: hashed});
+  const st = document.getElementById('reset-pass-status');
+  if(res.ok){ st.style.color='#00875a'; st.textContent='✅ Password berhasil diubah (tersimpan terenkripsi).'; alog(`<span class="log-ok">🔑 Reset password: ${_resetPegNip}</span>`); }
+  else { st.style.color='#e53e3e'; st.textContent='❌ Gagal: '+(res.err||'Error'); }
+}
+
+async function doResetPasswordDefault(){
+  if(!_resetPegNip) return;
+  const defaultPass = _resetPegNip.slice(-8);
+  const hashed = await sha256(defaultPass);
+  const res = await db.from('pegawai').eq('nip',_resetPegNip).patch({password: hashed});
+  const st = document.getElementById('reset-pass-status');
+  if(res.ok){ st.style.color='#00875a'; st.textContent=`✅ Password direset ke default (8 digit terakhir NIP), tersimpan terenkripsi.`; alog(`<span class="log-ok">🔑 Reset password default: ${_resetPegNip}</span>`); }
+  else { st.style.color='#e53e3e'; st.textContent='❌ Gagal: '+(res.err||'Error'); }
+}
 </script>
 </body>
 </html>
