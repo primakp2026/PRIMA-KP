@@ -461,6 +461,12 @@
 
     <!-- TAB: JADWAL REKAN -->
     <div id="tab-jadwal-rekan" class="tab-pane">
+      <div class="jadwal-nav-row" style="margin-bottom:16px;">
+        <button class="jadwal-nav-btn" onclick="jadwalRekanNav(-1)">‹ Bulan Lalu</button>
+        <div class="jadwal-nav-label" id="jr-label">—</div>
+        <button class="jadwal-nav-btn" onclick="jadwalRekanNav(1)">Bulan Depan ›</button>
+        <button class="jadwal-nav-today" onclick="jadwalRekanGoToday()">Bulan Ini</button>
+      </div>
       <div id="jadwal-rekan-list"><div class="rekan-empty">Memuat data...</div></div>
     </div>
 
@@ -1477,21 +1483,52 @@ function adaLiburDiMinggu(date) {
   return false;
 }
 
+// ── State bulan yang sedang ditampilkan di tab Jadwal Rekan ──────────────────
+let _jrBulan = null; // { y, m } — null berarti belum init
+
+function jadwalRekanGetBulan(){
+  if(!_jrBulan){
+    const now = new Date();
+    _jrBulan = { y: now.getFullYear(), m: now.getMonth() };
+  }
+  return _jrBulan;
+}
+
+function jadwalRekanNav(delta){
+  const b = jadwalRekanGetBulan();
+  let m = b.m + delta;
+  let y = b.y;
+  if(m > 11){ m = 0; y++; }
+  if(m < 0){ m = 11; y--; }
+  _jrBulan = { y, m };
+  renderJadwalRekan();
+}
+
+function jadwalRekanGoToday(){
+  const now = new Date();
+  _jrBulan = { y: now.getFullYear(), m: now.getMonth() };
+  renderJadwalRekan();
+}
+
 // ── Render tabel jadwal seluruh rekan ────────────────────────────────────────
 function renderJadwalRekan() {
-  const bt = getBulanTarget();
+  const b = jadwalRekanGetBulan();
   const container = document.getElementById('jadwal-rekan-list');
+  const labelEl = document.getElementById('jr-label');
   if(!container) return;
 
-  // Filter WFH bulan target
-  const wfhBulanTarget = S.wfhAll.filter(r=>{
+  // Update label navigasi
+  if(labelEl) labelEl.textContent = BULAN[b.m] + ' ' + b.y;
+
+  // Filter WFH bulan yang dipilih
+  const wfhBulanIni = S.wfhAll.filter(r=>{
     const d=new Date(r.tanggal_wfh+'T00:00:00');
-    return d.getFullYear()===bt.y && d.getMonth()===bt.m;
+    return d.getFullYear()===b.y && d.getMonth()===b.m;
   });
 
   // Kelompokkan per tanggal
   const perTgl = {};
-  wfhBulanTarget.forEach(r=>{
+  wfhBulanIni.forEach(r=>{
     if(!perTgl[r.tanggal_wfh]) perTgl[r.tanggal_wfh]=[];
     perTgl[r.tanggal_wfh].push(r.nama||'-');
   });
@@ -1500,7 +1537,7 @@ function renderJadwalRekan() {
   const kuota = getKuota(S.totalPeg);
 
   if(tglList.length===0){
-    container.innerHTML='<div style="text-align:center;color:var(--text-dim);padding:40px 0;font-size:0.88rem;">Belum ada pegawai yang mendaftar WFH untuk '+BULAN[bt.m]+' '+bt.y+'.</div>';
+    container.innerHTML='<div style="text-align:center;color:var(--text-dim);padding:40px 0;font-size:0.88rem;">Belum ada pegawai yang mendaftar WFH untuk '+BULAN[b.m]+' '+b.y+'.</div>';
     return;
   }
 
@@ -2829,7 +2866,13 @@ function switchTab(name) {
   if(tabBtn) tabBtn.classList.add('active');
   const pane = document.getElementById('tab-'+name);
   if(pane) pane.classList.add('active');
-  if(name==='jadwal-rekan') renderJadwalRekan();
+  if(name==='jadwal-rekan'){
+    if(!_jrBulan){ const now=new Date(); _jrBulan={y:now.getFullYear(),m:now.getMonth()}; }
+    renderJadwalRekan();
+    db.from('pilihan_wfh').sel('nip,nama,tanggal_wfh,kode_absensi').get().then(wRes=>{
+      if(wRes.ok){ S.wfhAll=wRes.data||[]; renderJadwalRekan(); }
+    }).catch(()=>{});
+  }
   if(name==='jadwal-harian'){
     // Tampilkan dulu dengan data yang ada, lalu refresh dari server
     renderJadwalHarian();
