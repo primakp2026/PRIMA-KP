@@ -2827,22 +2827,99 @@ function buildXlsxData(tahun,bulan,pegawai,wfhMap,tukarMap,absenMap,timOrder,grp
 
   // Footer
   const totPeg=pegawai.length;
-  const footStyle=(v)=>S(v,{font:fnt(true),fill:fil(GREY),alignment:aln('center','center'),border:brd()});
-  const footLbl=(v)=>S(v,{font:fnt(true),fill:fil(GREY),alignment:aln('left','center'),border:brd()});
+  const footStyle=(v,bgHex)=>S(v,{font:fnt(true,'000000'),fill:fil(bgHex||GREY),alignment:aln('center','center'),border:brd()});
+  const footLbl=(v,bgHex)=>S(v,{font:fnt(true,'000000'),fill:fil(bgHex||GREY),alignment:aln('left','center',true),border:brd()});
+  const footStyleC=(v,bgHex,fontHex)=>S(v,{font:fnt(true,fontHex||'000000'),fill:fil(bgHex||GREY),alignment:aln('center','center'),border:brd()});
 
+  // ── Baris rekap utama (WFH, Jumlah, Persentase) ──────────────────────────
   const jWfhRow=[S('',{fill:fil(GREY),border:brd()}),footLbl('Jumlah WFH')];
   const jPegRow=[S('',{fill:fil(GREY),border:brd()}),footLbl('JUMLAH PEGAWAI')];
   const pWfhRow=[S('',{fill:fil(GREY),border:brd()}),footLbl('Persentase WFH')];
   const pWfoRow=[S('',{fill:fil(GREY),border:brd()}),footLbl('Persentase WFO')];
 
+  // ── Baris rekap per kode keterangan ──────────────────────────────────────
+  // Format: { kode, label, bgColor, fontColor }
+  const REKAP_KODE=[
+    { kode:'WFHK', label:'Jumlah WFHK (WFH Khusus)',               bg:COLOR_WFHK, fg:'7a5f00' },
+    { kode:'CWS',  label:'Jumlah CWS (Co-Working Space)',           bg:COLOR_CWS,  fg:'0369a1' },
+    { kode:'TGS',  label:'Jumlah TGS (Penugasan)',                  bg:COLOR_TGS,  fg:'7c3200' },
+    { kode:'CP',   label:'Jumlah CP (Cuti Alasan Penting)',         bg:COLOR_CP,   fg:'7c3200' },
+    { kode:'CT',   label:'Jumlah CT (Cuti Tahunan)',                bg:COLOR_CUTI, fg:'6b21a8' },
+    { kode:'CB',   label:'Jumlah CB (Cuti Besar)',                  bg:COLOR_CUTI, fg:'5b21b6' },
+    { kode:'CS',   label:'Jumlah CS (Cuti Sakit)',                  bg:COLOR_CUTI, fg:'86198f' },
+    { kode:'CSR',  label:'Jumlah CSR (Cuti Sakit Rawat Inap)',      bg:COLOR_CUTI, fg:'9d174d' },
+    { kode:'CBL',  label:'Jumlah CBL (Cuti Bersalin)',              bg:COLOR_CUTI, fg:'be185d' },
+    { kode:'CLN',  label:'Jumlah CLN (Cuti Diluar Tanggungan)',     bg:COLOR_CUTI, fg:'4c1d95' },
+    { kode:'SAKIT',label:'Jumlah SAKIT',                            bg:COLOR_SAKIT,fg:'990000' },
+    { kode:'IZIN', label:'Jumlah IZIN',                             bg:COLOR_IZIN, fg:'166534' },
+    { kode:'WFO',  label:'Jumlah WFO (Work From Office)',           bg:COLOR_WFO,  fg:'404040' },
+  ];
+
+  // Inisialisasi array baris per kode
+  const rekapRows=REKAP_KODE.map(r=>({
+    ...r,
+    row:[S('',{fill:fil(r.bg),border:brd()}), footLbl(r.label, r.bg)]
+  }));
+
+  // Hitung per hari
   for(let d=1;d<=nHari;d++){
-    let cnt=0; pegawai.forEach(p=>{ if(wfhMap[p.nip+'|'+d])cnt++; });
-    jWfhRow.push(footStyle(cnt));
+    const tglObj=new Date(tahun,bulan-1,d);
+    const isWE=tglObj.getDay()===0||tglObj.getDay()===6;
+
+    // WFH count
+    let cntWFH=0;
+    pegawai.forEach(p=>{ if(wfhMap[p.nip+'|'+d]) cntWFH++; });
+    jWfhRow.push(footStyle(cntWFH));
     jPegRow.push(footStyle(totPeg));
-    pWfhRow.push(footStyle(totPeg>0?Math.round(cnt/totPeg*100)+'%':'0%'));
-    pWfoRow.push(footStyle(totPeg>0?Math.round((totPeg-cnt)/totPeg*100)+'%':'0%'));
+    pWfhRow.push(footStyle(totPeg>0?Math.round(cntWFH/totPeg*100)+'%':'0%'));
+
+    // WFO = pegawai yang tidak WFH dan tidak punya kode absensi lain
+    let cntWFO=0;
+    pegawai.forEach(p=>{
+      const key=p.nip+'|'+d;
+      const absen=absenMap&&absenMap[key];
+      const isWFH=!!wfhMap[key];
+      if(!isWFH && (!absen || !absen.kode || absen.kode==='WFO')) cntWFO++;
+    });
+    pWfoRow.push(footStyle(totPeg>0?Math.round((totPeg-cntWFH)/totPeg*100)+'%':'0%'));
+
+    // Per kode absensi
+    rekapRows.forEach(rk=>{
+      let cnt=0;
+      pegawai.forEach(p=>{
+        const key=p.nip+'|'+d;
+        const absen=absenMap&&absenMap[key];
+        if(rk.kode==='WFO'){
+          // WFO = tidak WFH dan tidak ada kode absensi khusus
+          const isWFH=!!wfhMap[key];
+          if(!isWFH && (!absen||!absen.kode||absen.kode==='WFO')) cnt++;
+        } else {
+          if(absen && absen.kode===rk.kode) cnt++;
+        }
+      });
+      // Jika weekend, tampilkan kosong
+      const valCell = isWE
+        ? S('',{fill:fil(RED),border:brd()})
+        : footStyleC(cnt>0?cnt:'—', rk.bg, cnt>0?rk.fg:'AAAAAA');
+      rk.row.push(valCell);
+    });
   }
+
+  // Tutup kolom STATUS (kolom terakhir)
   [jWfhRow,jPegRow,pWfhRow,pWfoRow].forEach(r=>{r.push(S('',{fill:fil(GREY),border:brd()}));pr(r);});
+
+  // ── Pemisah sebelum rekap keterangan ────────────────────────────────────
+  const sepRow=[S('',{fill:fil('404040'),border:brd()}),S('REKAPITULASI PER KODE KETERANGAN',{font:fnt(true,'FFFFFF',9),fill:fil('404040'),alignment:aln('left','center'),border:brd()})];
+  for(let i=0;i<nHari;i++) sepRow.push(S('',{fill:fil('404040'),border:brd()}));
+  sepRow.push(S('',{fill:fil('404040'),border:brd()}));
+  pr(sepRow);
+  merges.push({s:{r:R-1,c:1},e:{r:R-1,c:nHari+1}});
+
+  // Output baris rekap per kode
+  rekapRows.forEach(rk=>{
+    rk.row.push(S('',{fill:fil(rk.bg),border:brd()}));
+    pr(rk.row);
+  });
 
   // ── Legenda warna ──────────────────────────────────────────────────────────
   pr([S('',{})]);
