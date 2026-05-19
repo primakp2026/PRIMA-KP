@@ -259,6 +259,11 @@
     .chip-tgs{background:#fff8e1;color:#b7770d;}
     .chip-cp{background:#fce4d6;color:#7c3200;}
     .chip-cuti{background:#f3e8ff;color:#6b21a8;}
+    .chip-cb{background:#ede9fe;color:#5b21b6;}
+    .chip-cs{background:#fdf4ff;color:#86198f;}
+    .chip-csr{background:#fce7f3;color:#9d174d;}
+    .chip-cbl{background:#fdf2f8;color:#be185d;}
+    .chip-cln{background:#f5f3ff;color:#4c1d95;}
     .chip-sakit{background:#fff0f0;color:#dc2626;}
     .chip-cws{background:#e0f2fe;color:#0369a1;}
     .chip-wfhk{background:#fef3c7;color:#92400e;}
@@ -486,7 +491,12 @@
         <span class="jadwal-legend-chip chip-cws">CWS</span>
         <span class="jadwal-legend-chip chip-tgs">TGS</span>
         <span class="jadwal-legend-chip chip-cp">CP</span>
-        <span class="jadwal-legend-chip chip-cuti">CUTI</span>
+        <span class="jadwal-legend-chip chip-cuti">CT</span>
+        <span class="jadwal-legend-chip chip-cb">CB</span>
+        <span class="jadwal-legend-chip chip-cs">CS</span>
+        <span class="jadwal-legend-chip chip-csr">CSR</span>
+        <span class="jadwal-legend-chip chip-cbl">CBL</span>
+        <span class="jadwal-legend-chip chip-cln">CLN</span>
         <span class="jadwal-legend-chip chip-sakit">SAKIT</span>
         <span class="jadwal-legend-chip chip-izin">IZIN</span>
         <span class="jadwal-legend-chip chip-wfo">WFO</span>
@@ -514,7 +524,12 @@
         <span class="jadwal-legend-chip chip-cws">CWS</span>
         <span class="jadwal-legend-chip chip-tgs">TGS</span>
         <span class="jadwal-legend-chip chip-cp">CP</span>
-        <span class="jadwal-legend-chip chip-cuti">CUTI</span>
+        <span class="jadwal-legend-chip chip-cuti">CT</span>
+        <span class="jadwal-legend-chip chip-cb">CB</span>
+        <span class="jadwal-legend-chip chip-cs">CS</span>
+        <span class="jadwal-legend-chip chip-csr">CSR</span>
+        <span class="jadwal-legend-chip chip-cbl">CBL</span>
+        <span class="jadwal-legend-chip chip-cln">CLN</span>
         <span class="jadwal-legend-chip chip-sakit">SAKIT</span>
         <span class="jadwal-legend-chip chip-izin">IZIN</span>
         <span class="jadwal-legend-chip chip-wfo">WFO</span>
@@ -719,7 +734,8 @@
     <div class="admin-section">
       <h4>📋 Input Keterangan Absensi Pegawai</h4>
       <div style="font-size:0.8rem;color:var(--text-dim);margin-bottom:18px;">
-        Catat keterangan absensi pegawai untuk tanggal tertentu. Kode <strong>TGS, CP, CWS, WFHK</strong> wajib mengisi keterangan.
+        Catat keterangan absensi pegawai untuk tanggal tertentu. Kode <strong>TGS, CP, CWS, WFHK</strong> wajib mengisi keterangan.<br>
+        <span style="color:#6b21a8;font-weight:600;">Kode CUTI: CT = Cuti Tahunan · CP = Cuti Alasan Penting · CB = Cuti Besar · CS = Cuti Sakit · CSR = Cuti Sakit Rawat Inap · CBL = Cuti Bersalin · CLN = Cuti Diluar Tanggungan Negara</span>
       </div>
       <!-- Langkah 1: Pilih Pegawai -->
       <div class="ubah-step">
@@ -1043,15 +1059,20 @@ const KUOTA_PCT  = 0.20;
 
 /* ══ KODE ABSENSI ══════════════════════════════════════════════════════════════ */
 const KODE_ABSENSI = [
-  { kode:'WFH',  label:'Work From Home',           wajibKet:false, cssClass:'chip-wfh'  },
-  { kode:'WFO',  label:'Work From Office',          wajibKet:false, cssClass:'chip-wfo'  },
-  { kode:'WFHK', label:'WFH Khusus',               wajibKet:true,  cssClass:'chip-wfhk' },
-  { kode:'CWS',  label:'Co-Working Space',          wajibKet:true,  cssClass:'chip-cws'  },
-  { kode:'TGS',  label:'Penugasan',                 wajibKet:true,  cssClass:'chip-tgs'  },
-  { kode:'CP',   label:'Cuti Pegawai',              wajibKet:true,  cssClass:'chip-cp'   },
-  { kode:'CUTI', label:'Cuti Tahunan/Lainnya',      wajibKet:false, cssClass:'chip-cuti' },
-  { kode:'SAKIT',label:'Sakit',                     wajibKet:false, cssClass:'chip-sakit'},
-  { kode:'IZIN', label:'Izin',                      wajibKet:false, cssClass:'chip-izin' },
+  { kode:'WFH',  label:'Work From Home',                    wajibKet:false, cssClass:'chip-wfh'  },
+  { kode:'WFO',  label:'Work From Office',                  wajibKet:false, cssClass:'chip-wfo'  },
+  { kode:'WFHK', label:'WFH Khusus',                        wajibKet:true,  cssClass:'chip-wfhk' },
+  { kode:'CWS',  label:'Co-Working Space',                  wajibKet:true,  cssClass:'chip-cws'  },
+  { kode:'TGS',  label:'Penugasan',                         wajibKet:true,  cssClass:'chip-tgs'  },
+  { kode:'CP',   label:'Cuti Alasan Penting',               wajibKet:true,  cssClass:'chip-cp'   },
+  { kode:'CT',   label:'Cuti Tahunan',                      wajibKet:false, cssClass:'chip-cuti' },
+  { kode:'CB',   label:'Cuti Besar',                        wajibKet:false, cssClass:'chip-cb'   },
+  { kode:'CS',   label:'Cuti Sakit',                        wajibKet:false, cssClass:'chip-cs'   },
+  { kode:'CSR',  label:'Cuti Sakit Rawat Inap',             wajibKet:false, cssClass:'chip-csr'  },
+  { kode:'CBL',  label:'Cuti Bersalin',                     wajibKet:false, cssClass:'chip-cbl'  },
+  { kode:'CLN',  label:'Cuti Diluar Tanggungan Negara',     wajibKet:false, cssClass:'chip-cln'  },
+  { kode:'SAKIT',label:'Sakit',                             wajibKet:false, cssClass:'chip-sakit'},
+  { kode:'IZIN', label:'Izin',                              wajibKet:false, cssClass:'chip-izin' },
 ];
 
 // Map kode → objek untuk lookup cepat
@@ -2673,12 +2694,18 @@ function buildXlsxData(tahun,bulan,pegawai,wfhMap,tukarMap,absenMap,timOrder,grp
   // Map kode → warna Excel
   const KODE_COLOR={
     'WFH': WFH_NORMAL, 'WFHK': COLOR_WFHK, 'CWS': COLOR_CWS,
-    'TGS': COLOR_TGS, 'CP': COLOR_CP, 'CUTI': COLOR_CUTI,
+    'TGS': COLOR_TGS, 'CP': COLOR_CP,
+    'CT': COLOR_CUTI, 'CB': COLOR_CUTI, 'CS': COLOR_CUTI,
+    'CSR': COLOR_CUTI, 'CBL': COLOR_CUTI, 'CLN': COLOR_CUTI,
+    'CUTI': COLOR_CUTI,
     'SAKIT': COLOR_SAKIT, 'IZIN': COLOR_IZIN, 'WFO': COLOR_WFO
   };
   const KODE_FONT={
     'WFH':'FFFFFF','WFHK':'7a5f00','CWS':'0369a1',
-    'TGS':'7c3200','CP':'7c3200','CUTI':'6b21a8',
+    'TGS':'7c3200','CP':'7c3200',
+    'CT':'6b21a8','CB':'5b21b6','CS':'86198f',
+    'CSR':'9d174d','CBL':'be185d','CLN':'4c1d95',
+    'CUTI':'6b21a8',
     'SAKIT':'990000','IZIN':'166534','WFO':'404040'
   };
 
@@ -2832,7 +2859,7 @@ function buildXlsxData(tahun,bulan,pegawai,wfhMap,tukarMap,absenMap,timOrder,grp
     S('= Penugasan',{font:fnt(false,'000000',9),alignment:aln('left','center')}),
     S('',{}),
     S('CP',{font:fnt(true,'7c3200',9),fill:fil(COLOR_CP),alignment:aln('center','center'),border:brd()}),
-    S('= Cuti Pegawai',{font:fnt(false,'000000',9),alignment:aln('left','center')}),
+    S('= Cuti Alasan Penting',{font:fnt(false,'000000',9),alignment:aln('left','center')}),
   ]);
   pr([
     S('',{}),S('',{}),
@@ -2842,14 +2869,35 @@ function buildXlsxData(tahun,bulan,pegawai,wfhMap,tukarMap,absenMap,timOrder,grp
     S('WFHK',{font:fnt(true,'7a5f00',9),fill:fil(COLOR_WFHK),alignment:aln('center','center'),border:brd()}),
     S('= WFH Khusus',{font:fnt(false,'000000',9),alignment:aln('left','center')}),
     S('',{}),
-    S('CUTI',{font:fnt(true,'6b21a8',9),fill:fil(COLOR_CUTI),alignment:aln('center','center'),border:brd()}),
-    S('= Cuti Tahunan/Lainnya',{font:fnt(false,'000000',9),alignment:aln('left','center')}),
-    S('',{}),
     S('SAKIT',{font:fnt(true,'990000',9),fill:fil(COLOR_SAKIT),alignment:aln('center','center'),border:brd()}),
     S('= Sakit',{font:fnt(false,'000000',9),alignment:aln('left','center')}),
     S('',{}),
     S('IZIN',{font:fnt(true,'166534',9),fill:fil(COLOR_IZIN),alignment:aln('center','center'),border:brd()}),
     S('= Izin',{font:fnt(false,'000000',9),alignment:aln('left','center')}),
+  ]);
+  pr([S('',{})]);
+  pr([
+    S('KETERANGAN KODE CUTI:',{font:fnt(true,'6b21a8',10),alignment:aln('left','center')}),
+    S('',{}),
+    S('CT',{font:fnt(true,'6b21a8',9),fill:fil(COLOR_CUTI),alignment:aln('center','center'),border:brd()}),
+    S('= Cuti Tahunan',{font:fnt(false,'000000',9),alignment:aln('left','center')}),
+    S('',{}),
+    S('CB',{font:fnt(true,'5b21b6',9),fill:fil(COLOR_CUTI),alignment:aln('center','center'),border:brd()}),
+    S('= Cuti Besar',{font:fnt(false,'000000',9),alignment:aln('left','center')}),
+    S('',{}),
+    S('CS',{font:fnt(true,'86198f',9),fill:fil(COLOR_CUTI),alignment:aln('center','center'),border:brd()}),
+    S('= Cuti Sakit',{font:fnt(false,'000000',9),alignment:aln('left','center')}),
+    S('',{}),
+    S('CSR',{font:fnt(true,'9d174d',9),fill:fil(COLOR_CUTI),alignment:aln('center','center'),border:brd()}),
+    S('= Cuti Sakit Rawat Inap',{font:fnt(false,'000000',9),alignment:aln('left','center')}),
+  ]);
+  pr([
+    S('',{}),S('',{}),
+    S('CBL',{font:fnt(true,'be185d',9),fill:fil(COLOR_CUTI),alignment:aln('center','center'),border:brd()}),
+    S('= Cuti Bersalin',{font:fnt(false,'000000',9),alignment:aln('left','center')}),
+    S('',{}),
+    S('CLN',{font:fnt(true,'4c1d95',9),fill:fil(COLOR_CUTI),alignment:aln('center','center'),border:brd()}),
+    S('= Cuti Diluar Tanggungan Negara',{font:fnt(false,'000000',9),alignment:aln('left','center')}),
   ]);
 
   return {rows, merges};
@@ -3192,6 +3240,7 @@ function renderJadwalHarian(){
   const groups={};
   KODE_ABSENSI.forEach(k=>{ groups[k.kode]=[]; });
   groups['WFO']=[];
+  groups['CUTI']=groups['CUTI']||[]; // backward compat data lama
 
   allPeg.forEach(p=>{
     const st=statusMap[p.nip];
@@ -3204,11 +3253,17 @@ function renderJadwalHarian(){
   });
 
   // Render per group — SELALU tampilkan WFO
-  const groupOrder=['WFH','WFHK','CWS','TGS','CP','CUTI','SAKIT','IZIN','WFO'];
+  const groupOrder=['WFH','WFHK','CWS','TGS','CP','CT','CB','CS','CSR','CBL','CLN','SAKIT','IZIN','WFO'];
   const groupLabel={
     'WFH':'🏠 WFH — Work From Home','WFHK':'🔒 WFHK — WFH Khusus',
     'CWS':'☕ CWS — Co-Working Space','TGS':'✈️ TGS — Penugasan',
-    'CP':'🌴 CP — Cuti Pegawai','CUTI':'🌴 CUTI — Cuti Tahunan/Lainnya',
+    'CP':'🌴 CP — Cuti Alasan Penting',
+    'CT':'🌴 CT — Cuti Tahunan',
+    'CB':'🌴 CB — Cuti Besar',
+    'CS':'🌴 CS — Cuti Sakit',
+    'CSR':'🏥 CSR — Cuti Sakit Rawat Inap',
+    'CBL':'🌺 CBL — Cuti Bersalin',
+    'CLN':'🌴 CLN — Cuti Diluar Tanggungan Negara',
     'SAKIT':'🏥 SAKIT — Sakit','IZIN':'📝 IZIN — Izin',
     'WFO':'🏢 WFO — Work From Office'
   };
