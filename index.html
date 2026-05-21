@@ -752,8 +752,20 @@ Pegawai yang ditugaskan WFO pada hari Jumat dapat melaksanakan WFH pada hari Rab
       </div>
       <!-- Langkah 2: Pilih Tanggal -->
       <div class="ubah-step" id="absen-step2" style="display:none;">
-        <div class="ubah-step-label">② Pilih Tanggal</div>
-        <input type="date" id="absen-tgl" class="config-inp" style="max-width:220px;" onchange="absenTglChange()">
+        <div class="ubah-step-label">② Pilih Rentang Tanggal</div>
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+          <div>
+            <div style="font-size:0.7rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--navy-light);margin-bottom:6px;">Tanggal Mulai</div>
+            <input type="date" id="absen-tgl-dari" class="config-inp" style="max-width:200px;" onchange="absenTglRangeChange()">
+          </div>
+          <div style="margin-top:18px;font-size:1rem;color:var(--text-dim);font-weight:700;">—</div>
+          <div>
+            <div style="font-size:0.7rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--navy-light);margin-bottom:6px;">Tanggal Selesai</div>
+            <input type="date" id="absen-tgl-sampai" class="config-inp" style="max-width:200px;" onchange="absenTglRangeChange()">
+          </div>
+          <div id="absen-range-info" style="margin-top:18px;font-size:0.78rem;color:var(--text-dim);font-weight:600;"></div>
+        </div>
+        <div style="font-size:0.72rem;color:var(--text-dim);margin-top:8px;">💡 Untuk satu hari, isi tanggal mulai dan selesai dengan tanggal yang sama.</div>
       </div>
       <!-- Langkah 3: Pilih Kode Absensi -->
       <div class="ubah-step" id="absen-step3" style="display:none;">
@@ -3080,31 +3092,58 @@ function absenPilihPegawai(nip){
   const list = UB.pegawaiList.length ? UB.pegawaiList : S.pegawaiAll;
   const p = list.find(x=>x.nip===nip);
   if(!p) return;
-  AB.pegawai = p; AB.kode=''; AB.keterangan='';
+  AB.pegawai = p; AB.kode=''; AB.keterangan=''; AB.tglDari=''; AB.tglSampai='';
   document.getElementById('absen-peg-inp').value = p.nama;
   document.getElementById('absen-peg-drop').classList.remove('show');
   document.getElementById('absen-peg-card').classList.add('show');
   document.getElementById('absen-peg-nama').textContent = p.nama+' — '+(p.tim_kerja||'-');
-  // Set default tanggal = hari ini
+  // Set default tanggal = hari ini (mulai & selesai sama = 1 hari)
   const today = toLocalISO(new Date());
-  document.getElementById('absen-tgl').value = today;
+  document.getElementById('absen-tgl-dari').value = today;
+  document.getElementById('absen-tgl-sampai').value = today;
   document.getElementById('absen-step2').style.display='block';
   document.getElementById('absen-step3').style.display='block';
-  AB.tgl = today;
+  AB.tglDari = today; AB.tglSampai = today; AB.tgl = today;
+  absenUpdateRangeInfo();
   renderAbsenCodeGrid();
   loadAbsenHistory(nip);
   document.getElementById('btn-absen').disabled=true;
   document.getElementById('absen-preview-box').className='ubah-info-box';
 }
 
-function absenTglChange(){
-  AB.tgl = document.getElementById('absen-tgl').value;
+function absenTglRangeChange(){
+  const dari = document.getElementById('absen-tgl-dari').value;
+  const sampaiEl = document.getElementById('absen-tgl-sampai');
+  let sampai = sampaiEl.value;
+  // Auto-adjust: jika selesai < mulai, samakan selesai = mulai
+  if(dari && sampai && sampai < dari){
+    sampaiEl.value = dari;
+    sampai = dari;
+  }
+  AB.tglDari = dari; AB.tglSampai = sampai; AB.tgl = dari;
   AB.kode=''; AB.keterangan='';
+  absenUpdateRangeInfo();
   renderAbsenCodeGrid();
   document.getElementById('btn-absen').disabled=true;
   document.getElementById('absen-preview-box').className='ubah-info-box';
   if(AB.pegawai) loadAbsenHistory(AB.pegawai.nip);
 }
+
+function absenUpdateRangeInfo(){
+  const info = document.getElementById('absen-range-info');
+  if(!info) return;
+  const dari = AB.tglDari||'', sampai = AB.tglSampai||'';
+  if(!dari || !sampai){ info.textContent=''; return; }
+  const d1 = new Date(dari+'T00:00:00'), d2 = new Date(sampai+'T00:00:00');
+  const selisih = Math.round((d2-d1)/(1000*60*60*24))+1;
+  if(selisih===1){
+    info.innerHTML = '<span style="color:#00875a;">\u{1F4C5} 1 hari</span>';
+  } else {
+    info.innerHTML = '<span style="color:#1e40af;">\u{1F4C5} '+selisih+' hari</span>';
+  }
+}
+
+function absenTglChange(){ absenTglRangeChange(); }
 
 function renderAbsenCodeGrid(){
   const grid = document.getElementById('absen-code-grid');
@@ -3147,7 +3186,8 @@ function updateAbsenKetWrap(){
 }
 
 function updateAbsenPreview(){
-  if(!AB.pegawai||!AB.kode||!AB.tgl){ document.getElementById('btn-absen').disabled=true; return; }
+  const dari = AB.tglDari||AB.tgl, sampai = AB.tglSampai||AB.tgl;
+  if(!AB.pegawai||!AB.kode||!dari){ document.getElementById('btn-absen').disabled=true; return; }
   const info = KODE_MAP[AB.kode];
   const ket = document.getElementById('absen-ket-inp').value.trim();
   // Cek wajib keterangan
@@ -3159,10 +3199,14 @@ function updateAbsenPreview(){
     return;
   }
   AB.keterangan = ket;
-  const d=new Date(AB.tgl+'T00:00:00');
   const box=document.getElementById('absen-preview-box');
   box.className='ubah-info-box show';
-  box.innerHTML=`💾 Simpan keterangan: <strong>${AB.pegawai.nama}</strong> — <strong>${HARI[d.getDay()]}, ${fmtTgl(AB.tgl)}</strong> — Kode: <strong>${AB.kode}</strong>${ket?' — '+ket:''}`;
+  const d1=new Date(dari+'T00:00:00'), d2=new Date((sampai||dari)+'T00:00:00');
+  const selisih = Math.round((d2-d1)/(1000*60*60*24))+1;
+  const tglLabel = (dari===sampai||!sampai||sampai===dari)
+    ? `<strong>${HARI[d1.getDay()]}, ${fmtTgl(dari)}</strong>`
+    : `<strong>${fmtTgl(dari)}</strong> s/d <strong>${fmtTgl(sampai)}</strong> (${selisih} hari)`;
+  box.innerHTML=`💾 Simpan keterangan: <strong>${AB.pegawai.nama}</strong> — ${tglLabel} — Kode: <strong>${AB.kode}</strong>${ket?' — '+ket:''}`;
   document.getElementById('btn-absen').disabled=false;
 }
 
@@ -3178,21 +3222,37 @@ document.addEventListener('DOMContentLoaded',()=>{
 });
 
 async function simpanAbsensi(){
-  if(!AB.pegawai||!AB.kode||!AB.tgl) return;
+  const dari = AB.tglDari||AB.tgl, sampai = AB.tglSampai||AB.tgl||dari;
+  if(!AB.pegawai||!AB.kode||!dari) return;
   const info=KODE_MAP[AB.kode];
   const ket=document.getElementById('absen-ket-inp').value.trim();
   if(info&&info.wajibKet&&!ket) return swal('Keterangan Wajib','Kode '+AB.kode+' harus disertai keterangan.','warning');
+  // Buat daftar tanggal dalam range
+  const tanggalList = [];
+  const cur = new Date(dari+'T00:00:00');
+  const end = new Date((sampai||dari)+'T00:00:00');
+  while(cur <= end){
+    tanggalList.push(toLocalISO(cur));
+    cur.setDate(cur.getDate()+1);
+  }
   showLoad(true);
-  // Upsert — satu baris per nip+tanggal
-  const payload={nip:AB.pegawai.nip, nama:AB.pegawai.nama, tanggal:AB.tgl, kode:AB.kode, keterangan:ket};
-  const {ok,err}=await db.from('absensi_keterangan').upsert(payload,'nip,tanggal');
+  let failCount=0, successCount=0;
+  for(const tgl of tanggalList){
+    const payload={nip:AB.pegawai.nip, nama:AB.pegawai.nama, tanggal:tgl, kode:AB.kode, keterangan:ket};
+    const {ok,err}=await db.from('absensi_keterangan').upsert(payload,'nip,tanggal');
+    if(!ok){ failCount++; alog('err','Gagal simpan absensi '+tgl+': '+err); }
+    else {
+      successCount++;
+      S.absensiAll=S.absensiAll.filter(r=>!(r.nip===AB.pegawai.nip&&r.tanggal===tgl));
+      S.absensiAll.push(payload);
+    }
+  }
   showLoad(false);
-  if(!ok){ alog('err','Gagal simpan absensi: '+err); return swal('Gagal','Error: '+err,'error'); }
-  alog('ok','Absensi '+AB.pegawai.nama+' ('+AB.tgl+') disimpan: '+AB.kode+(ket?' — '+ket:''));
-  // Update lokal
-  S.absensiAll=S.absensiAll.filter(r=>!(r.nip===AB.pegawai.nip&&r.tanggal===AB.tgl));
-  S.absensiAll.push(payload);
-  await Swal.fire({title:'Tersimpan! ✅',text:'Keterangan absensi '+AB.pegawai.nama+' berhasil disimpan.',icon:'success',confirmButtonColor:'#0a1628'});
+  if(failCount>0&&successCount===0){ return swal('Gagal','Terjadi error saat menyimpan absensi.','error'); }
+  const rangeLabel = tanggalList.length===1 ? fmtTgl(tanggalList[0]) : fmtTgl(tanggalList[0])+' s/d '+fmtTgl(tanggalList[tanggalList.length-1]);
+  alog('ok','Absensi '+AB.pegawai.nama+' ('+rangeLabel+') disimpan: '+AB.kode+(ket?' — '+ket:'')+(failCount?' | '+failCount+' gagal':''));
+  const msgExtra = failCount>0 ? ' ('+failCount+' tanggal gagal disimpan)' : '';
+  await Swal.fire({title:'Tersimpan! ✅',text:'Keterangan absensi '+AB.pegawai.nama+' ('+rangeLabel+') berhasil disimpan.'+msgExtra,icon:'success',confirmButtonColor:'#0a1628'});
   loadAbsenHistory(AB.pegawai.nip);
   document.getElementById('absen-preview-box').className='ubah-info-box';
   document.getElementById('btn-absen').disabled=true;
@@ -3233,7 +3293,7 @@ async function hapusAbsensi(nip,tanggal){
 }
 
 function resetAbsensi(){
-  AB={pegawai:null,tgl:'',kode:'',keterangan:''};
+  AB={pegawai:null,tgl:'',tglDari:'',tglSampai:'',kode:'',keterangan:''};
   document.getElementById('absen-peg-inp').value='';
   document.getElementById('absen-peg-drop').classList.remove('show');
   document.getElementById('absen-peg-card').classList.remove('show');
@@ -3242,6 +3302,12 @@ function resetAbsensi(){
   document.getElementById('absen-preview-box').className='ubah-info-box';
   document.getElementById('btn-absen').disabled=true;
   document.getElementById('absen-history-wrap').style.display='none';
+  const dari=document.getElementById('absen-tgl-dari');
+  const sampai=document.getElementById('absen-tgl-sampai');
+  const ri=document.getElementById('absen-range-info');
+  if(dari) dari.value='';
+  if(sampai) sampai.value='';
+  if(ri) ri.textContent='';
 }
 
 /* ══════════════════════════════════════════════
