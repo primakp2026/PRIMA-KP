@@ -2552,7 +2552,8 @@ async function generateXlsx(tahun,bulan){
     // Buat absenMap: "nip|tgl" -> {kode, keterangan}
     const wfhMap={}, tukarMap={}, absenMap={};
     wfhAll.forEach(r=>{
-      const d=new Date(r.tanggal_wfh);
+      // Tambahkan T00:00:00 agar tidak diparse sebagai UTC (mencegah geser hari di WIB)
+      const d=new Date(r.tanggal_wfh+'T00:00:00');
       if(d.getFullYear()===tahun&&(d.getMonth()+1)===bulan){
         const key=r.nip+'|'+d.getDate();
         wfhMap[key]=true;
@@ -2560,7 +2561,7 @@ async function generateXlsx(tahun,bulan){
       }
     });
     absenRes.forEach(r=>{
-      const d=new Date(r.tanggal);
+      const d=new Date(r.tanggal+'T00:00:00');
       if(d.getFullYear()===tahun&&(d.getMonth()+1)===bulan){
         const key=r.nip+'|'+d.getDate();
         absenMap[key]={kode:r.kode, keterangan:r.keterangan||''};
