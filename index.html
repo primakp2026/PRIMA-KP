@@ -1101,7 +1101,9 @@ const db = {
         if(this._w.length)u+='&'+this._w.join('&');
         if(this._o)u+='&order='+this._o;
         if(this._lim)u+='&limit='+this._lim;
-        const r=await fetch(u,{headers:sbH()});
+        // Tambah Range header agar tidak terpotong di 1000 baris (default Supabase)
+        const headers={...sbH(),'Range':'0-9999','Prefer':'count=none'};
+        const r=await fetch(u,{headers});
         return {data:await r.json(),ok:r.ok};
       },
       async ins(rows){
