@@ -27,9 +27,10 @@
     @keyframes spin{to{transform:rotate(360deg);}}
     #loading p{color:rgba(255,255,255,0.6);font-size:0.78rem;font-weight:600;letter-spacing:0.1em;}
     /* COUNTDOWN */
-    #page-countdown{align-items:center;justify-content:center;background:linear-gradient(135deg,var(--navy) 0%,var(--navy-light) 100%);flex-direction:column;}
+    #page-countdown{align-items:center;justify-content:center;background:#000000;flex-direction:column;}
+
     .countdown-card{text-align:center;padding:60px 48px;}
-    .countdown-logo{width:220px;margin:0 auto 28px;filter:none;}
+    .countdown-logo{width:100px;margin:0 auto 28px;filter:none;}
     .countdown-title{font-family:'DM Serif Display',serif;font-size:2rem;color:white;margin-bottom:8px;}
     .countdown-sub{color:rgba(255,255,255,0.5);font-size:0.9rem;margin-bottom:40px;font-weight:500;}
     .opens-label{color:var(--gold-light);font-size:0.75rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;margin-bottom:20px;}
@@ -360,7 +361,7 @@
 <!-- PAGE 1: COUNTDOWN -->
 <div id="page-countdown" class="page" style="flex-direction:column;">
   <div class="countdown-card">
-    <img src="https://lh3.googleusercontent.com/u/0/d/1YComxcxcnK7RoQuC2qmfJoV_K15Otc8m" class="countdown-logo" alt="Logo" onerror="this.style.display='none'">
+    <img src="https://lh3.googleusercontent.com/u/0/d/1EzAg0fJK_NFmMIS5MBv-El3r_kDN2baR" class="countdown-logo" alt="Logo" onerror="this.style.display='none'">
     <div class="countdown-title">Pusdiklat Keuangan Publik</div>
     <div class="countdown-sub">PRIMA KP - Portal Informasi dan Monitoring Kehadiran Anak KP</div>
     <div class="opens-label" id="cd-label">⏳ &nbsp;Pendaftaran Dibuka Dalam</div>
@@ -400,7 +401,8 @@
         <button onclick="togglePassVis()" style="position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text-dim);font-size:1rem;" id="btn-pass-eye">👁️</button>
       </div>
       <button class="btn-login" onclick="handleLogin()">MASUK KE PORTAL →</button>
-      <div class="kmk-note"><strong>Ketentuan:</strong> Kuota WFH maks. 20% pegawai per hari · 1 hari WFH per minggu · Dilarang WFH saat ada hari libur nasional di minggu tersebut.<br><br>💡 <em>Password default: 8 digit terakhir NIP Anda. Hubungi admin jika lupa password.</em></div>
+      <div class="kmk-note"><strong>Ketentuan:</strong> Sesuai dengan SE Nomor 2/MK/SJ/2026, WFH dilaksanakan setiap hari Jumat.
+Pegawai yang ditugaskan WFO pada hari Jumat dapat melaksanakan WFH pada hari Rabu. <br><br>💡 <em>Password default: 8 digit terakhir NIP Anda. Hubungi admin jika lupa password.</em></div>
     </div>
   </div>
 </div>
