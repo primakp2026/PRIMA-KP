@@ -2553,10 +2553,13 @@ async function generateXlsx(tahun,bulan){
   alog('info','Memulai generate jadwal '+label+'...');
   setAdminBtns(true); showLoad(true);
   try {
+    // Format range bulan untuk filter
+    const tglAwal = `${tahun}-${String(bulan).padStart(2,'0')}-01`;
+    const tglAkhir = `${tahun}-${String(bulan).padStart(2,'0')}-${new Date(tahun,bulan,0).getDate()}`;
     const [pRes,wRes,aRes]=await Promise.all([
       db.from('pegawai').sel('nip,nama,jabatan,tim_kerja').ord('nama').get(),
-      db.from('pilihan_wfh').sel('nip,tanggal_wfh,is_tukar').get(),
-      db.from('absensi_keterangan').sel('nip,tanggal,kode,keterangan').get(),
+      db.from('pilihan_wfh').sel('nip,tanggal_wfh,is_tukar').gte('tanggal_wfh',tglAwal).lte('tanggal_wfh',tglAkhir).get(),
+      db.from('absensi_keterangan').sel('nip,tanggal,kode,keterangan').gte('tanggal',tglAwal).lte('tanggal',tglAkhir).get(),
     ]);
     const pegawai=pRes.data||[];
     const wfhAll =wRes.data||[];
