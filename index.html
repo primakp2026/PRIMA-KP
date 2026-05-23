@@ -753,7 +753,18 @@ Pegawai yang ditugaskan WFO pada hari Jumat dapat melaksanakan WFH pada hari Rab
       <!-- Langkah 2: Pilih Tanggal -->
       <div class="ubah-step" id="absen-step2" style="display:none;">
         <div class="ubah-step-label">② Pilih Tanggal</div>
-        <input type="date" id="absen-tgl" class="config-inp" style="max-width:220px;" onchange="absenTglChange()">
+        <div style="display:flex;gap:10px;margin-bottom:12px;">
+          <button id="btn-tgl-single" onclick="absenSetTglMode('single')" style="padding:7px 16px;border-radius:100px;font-size:0.78rem;font-weight:700;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;border:1.5px solid var(--navy);background:var(--navy);color:white;transition:all 0.2s;">📅 Tanggal Tunggal</button>
+          <button id="btn-tgl-range" onclick="absenSetTglMode('range')" style="padding:7px 16px;border-radius:100px;font-size:0.78rem;font-weight:700;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;border:1.5px solid #c8d4ea;background:white;color:var(--text-dim);transition:all 0.2s;">📆 Range Tanggal</button>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+          <input type="date" id="absen-tgl" class="config-inp" style="max-width:200px;" onchange="absenTglChange()">
+          <span id="absen-tgl-sampai-wrap" style="display:none;align-items:center;gap:8px;">
+            <span style="font-size:0.82rem;font-weight:600;color:var(--text-dim);">s/d</span>
+            <input type="date" id="absen-tgl-akhir" class="config-inp" style="max-width:200px;" onchange="absenTglChange()">
+          </span>
+        </div>
+        <div id="absen-tgl-info" style="margin-top:8px;font-size:0.76rem;color:var(--text-dim);display:none;"></div>
       </div>
       <!-- Langkah 3: Pilih Kode Absensi -->
       <div class="ubah-step" id="absen-step3" style="display:none;">
@@ -1067,9 +1078,11 @@ const KODE_ABSENSI = [
   { kode:'CWS',  label:'Co-Working Space',                  wajibKet:true,  cssClass:'chip-cws'  },
   { kode:'TGS',  label:'Penugasan',                         wajibKet:true,  cssClass:'chip-tgs'  },
   { kode:'CP',   label:'Cuti Alasan Penting',               wajibKet:true,  cssClass:'chip-cp'   },
+  { kode:'CPH',  label:'Cuti Setengah Hari Pagi',           wajibKet:false, cssClass:'chip-cp'   },
   { kode:'CT',   label:'Cuti Tahunan',                      wajibKet:false, cssClass:'chip-cuti' },
   { kode:'CB',   label:'Cuti Besar',                        wajibKet:false, cssClass:'chip-cb'   },
   { kode:'CS',   label:'Cuti Sakit',                        wajibKet:false, cssClass:'chip-cs'   },
+  { kode:'CSH',  label:'Cuti Setengah Hari Siang',          wajibKet:false, cssClass:'chip-cs'   },
   { kode:'CSR',  label:'Cuti Sakit Rawat Inap',             wajibKet:false, cssClass:'chip-csr'  },
   { kode:'CBL',  label:'Cuti Bersalin',                     wajibKet:false, cssClass:'chip-cbl'  },
   { kode:'CLN',  label:'Cuti Diluar Tanggungan Negara',     wajibKet:false, cssClass:'chip-cln'  },
@@ -2855,9 +2868,11 @@ function buildXlsxData(tahun,bulan,pegawai,wfhMap,tukarMap,absenMap,timOrder,grp
     { kode:'CWS',  label:'Jumlah CWS (Co-Working Space)',           bg:COLOR_CWS,  fg:'0369a1' },
     { kode:'TGS',  label:'Jumlah TGS (Penugasan)',                  bg:COLOR_TGS,  fg:'7c3200' },
     { kode:'CP',   label:'Jumlah CP (Cuti Alasan Penting)',         bg:COLOR_CP,   fg:'7c3200' },
+    { kode:'CPH',  label:'Jumlah CPH (Cuti Setengah Hari Pagi)',    bg:COLOR_CP,   fg:'7c3200' },
     { kode:'CT',   label:'Jumlah CT (Cuti Tahunan)',                bg:COLOR_CUTI, fg:'6b21a8' },
     { kode:'CB',   label:'Jumlah CB (Cuti Besar)',                  bg:COLOR_CUTI, fg:'5b21b6' },
     { kode:'CS',   label:'Jumlah CS (Cuti Sakit)',                  bg:COLOR_CUTI, fg:'86198f' },
+    { kode:'CSH',  label:'Jumlah CSH (Cuti Setengah Hari Siang)',   bg:COLOR_CUTI, fg:'86198f' },
     { kode:'CSR',  label:'Jumlah CSR (Cuti Sakit Rawat Inap)',      bg:COLOR_CUTI, fg:'9d174d' },
     { kode:'CBL',  label:'Jumlah CBL (Cuti Bersalin)',              bg:COLOR_CUTI, fg:'be185d' },
     { kode:'CLN',  label:'Jumlah CLN (Cuti Diluar Tanggungan)',     bg:COLOR_CUTI, fg:'4c1d95' },
@@ -3134,12 +3149,61 @@ function absenHapusPeg(nip){
   updateAbsenPreview();
 }
 
+let AB_tglMode = 'single'; // 'single' | 'range'
+
+function absenSetTglMode(mode){
+  AB_tglMode = mode;
+  const wrap = document.getElementById('absen-tgl-sampai-wrap');
+  const btnS = document.getElementById('btn-tgl-single');
+  const btnR = document.getElementById('btn-tgl-range');
+  if(mode === 'range'){
+    wrap.style.display='flex';
+    btnR.style.background='var(--navy)'; btnR.style.color='white'; btnR.style.borderColor='var(--navy)';
+    btnS.style.background='white'; btnS.style.color='var(--text-dim)'; btnS.style.borderColor='#c8d4ea';
+  } else {
+    wrap.style.display='none';
+    btnS.style.background='var(--navy)'; btnS.style.color='white'; btnS.style.borderColor='var(--navy)';
+    btnR.style.background='white'; btnR.style.color='var(--text-dim)'; btnR.style.borderColor='#c8d4ea';
+    document.getElementById('absen-tgl-info').style.display='none';
+  }
+  absenTglChange();
+}
+
+// Dapatkan semua tanggal kerja dalam range (skip Sabtu & Minggu)
+function getTanggalRange(tglAwal, tglAkhir){
+  const result = [];
+  const d = new Date(tglAwal+'T00:00:00');
+  const end = new Date(tglAkhir+'T00:00:00');
+  while(d <= end){
+    const day = d.getDay();
+    if(day !== 0 && day !== 6){ // skip Minggu & Sabtu
+      result.push(toLocalISO(new Date(d)));
+    }
+    d.setDate(d.getDate()+1);
+  }
+  return result;
+}
+
 function absenTglChange(){
   AB.tgl = document.getElementById('absen-tgl').value;
   AB.kode=''; AB.keterangan='';
   renderAbsenCodeGrid();
   document.getElementById('btn-absen').disabled=true;
   document.getElementById('absen-preview-box').className='ubah-info-box';
+
+  // Tampilkan info range
+  if(AB_tglMode === 'range'){
+    const tglAkhir = document.getElementById('absen-tgl-akhir').value;
+    const info = document.getElementById('absen-tgl-info');
+    if(AB.tgl && tglAkhir){
+      const dates = getTanggalRange(AB.tgl, tglAkhir);
+      info.style.display='block';
+      info.textContent = `📅 ${dates.length} hari kerja dipilih (Sabtu & Minggu dilewati)`;
+    } else {
+      info.style.display='none';
+    }
+  }
+  updateAbsenPreview();
 }
 
 function renderAbsenCodeGrid(){
@@ -3193,10 +3257,22 @@ function updateAbsenPreview(){
     btn.disabled=true; return;
   }
   AB.keterangan = ket;
-  const d = new Date(AB.tgl+'T00:00:00');
   const namaList = AB_pegawaiList.map(p=>`<strong>${p.nama}</strong>`).join(', ');
+
+  let tglInfo = '';
+  if(AB_tglMode === 'range'){
+    const tglAkhir = document.getElementById('absen-tgl-akhir').value;
+    if(!tglAkhir){ btn.disabled=true; return; }
+    const dates = getTanggalRange(AB.tgl, tglAkhir);
+    if(!dates.length){ btn.disabled=true; return; }
+    tglInfo = `📅 <strong>${dates.length} hari kerja</strong> (${fmtTgl(AB.tgl)} s/d ${fmtTgl(tglAkhir)})`;
+  } else {
+    const d = new Date(AB.tgl+'T00:00:00');
+    tglInfo = `📅 <strong>${HARI[d.getDay()]}, ${fmtTgl(AB.tgl)}</strong>`;
+  }
+
   box.className='ubah-info-box show';
-  box.innerHTML=`💾 Simpan untuk ${AB_pegawaiList.length} pegawai: ${namaList}<br>📅 <strong>${HARI[d.getDay()]}, ${fmtTgl(AB.tgl)}</strong> — Kode: <strong>${AB.kode}</strong>${ket?' — '+ket:''}`;
+  box.innerHTML=`💾 Simpan untuk ${AB_pegawaiList.length} pegawai: ${namaList}<br>${tglInfo} — Kode: <strong>${AB.kode}</strong>${ket?' — '+ket:''}`;
   btn.disabled=false;
 }
 
@@ -3215,23 +3291,48 @@ async function simpanAbsensi(){
   const info=KODE_MAP[AB.kode];
   const ket=document.getElementById('absen-ket-inp').value.trim();
   if(info&&info.wajibKet&&!ket) return swal('Keterangan Wajib','Kode '+AB.kode+' harus disertai keterangan.','warning');
+
+  // Kumpulkan semua tanggal yang akan diinsert
+  let tanggalList = [];
+  if(AB_tglMode === 'range'){
+    const tglAkhir = document.getElementById('absen-tgl-akhir').value;
+    tanggalList = getTanggalRange(AB.tgl, tglAkhir);
+    if(!tanggalList.length) return swal('Tanggal Kosong','Tidak ada hari kerja dalam range yang dipilih.','warning');
+  } else {
+    tanggalList = [AB.tgl];
+  }
+
+  const totalOps = AB_pegawaiList.length * tanggalList.length;
+  const konfirm = await Swal.fire({
+    title:'Konfirmasi',
+    html:`Simpan <strong>${AB.kode}</strong> untuk <strong>${AB_pegawaiList.length} pegawai</strong> × <strong>${tanggalList.length} hari</strong> = <strong>${totalOps} data</strong>?`,
+    icon:'question',
+    showCancelButton:true,
+    confirmButtonText:'Ya, Simpan',
+    cancelButtonText:'Batal',
+    confirmButtonColor:'#00c9a7'
+  });
+  if(!konfirm.isConfirmed) return;
+
   showLoad(true);
   let gagal=0;
   for(const peg of AB_pegawaiList){
-    const payload={nip:peg.nip, nama:peg.nama, tanggal:AB.tgl, kode:AB.kode, keterangan:ket};
-    const {ok,err}=await db.from('absensi_keterangan').upsert(payload,'nip,tanggal');
-    if(!ok){ gagal++; alog('err','Gagal simpan absensi '+peg.nama+': '+err); }
-    else{
-      alog('ok','Absensi '+peg.nama+' ('+AB.tgl+') disimpan: '+AB.kode+(ket?' — '+ket:''));
-      S.absensiAll=S.absensiAll.filter(r=>!(r.nip===peg.nip&&r.tanggal===AB.tgl));
-      S.absensiAll.push(payload);
+    for(const tgl of tanggalList){
+      const payload={nip:peg.nip, nama:peg.nama, tanggal:tgl, kode:AB.kode, keterangan:ket};
+      const {ok,err}=await db.from('absensi_keterangan').upsert(payload,'nip,tanggal');
+      if(!ok){ gagal++; alog('err','Gagal simpan absensi '+peg.nama+' '+tgl+': '+err); }
+      else{
+        S.absensiAll=S.absensiAll.filter(r=>!(r.nip===peg.nip&&r.tanggal===tgl));
+        S.absensiAll.push(payload);
+      }
     }
   }
   showLoad(false);
-  if(gagal>0) return swal('Sebagian Gagal',gagal+' pegawai gagal disimpan.','warning');
+  if(gagal>0) return swal('Sebagian Gagal',gagal+' operasi gagal disimpan.','warning');
+  alog('ok',`Absensi ${AB_pegawaiList.length} pegawai × ${tanggalList.length} hari (${AB.kode}) disimpan.`);
   await Swal.fire({
     title:'Tersimpan! ✅',
-    text:`Keterangan absensi ${AB_pegawaiList.length} pegawai berhasil disimpan.`,
+    html:`<strong>${totalOps} data</strong> keterangan absensi berhasil disimpan.`,
     icon:'success',confirmButtonColor:'#0a1628'
   });
   resetAbsensi();
@@ -3274,6 +3375,7 @@ async function hapusAbsensi(nip,tanggal){
 function resetAbsensi(){
   AB={pegawai:null,tgl:'',kode:'',keterangan:''};
   AB_pegawaiList=[];
+  AB_tglMode='single';
   document.getElementById('absen-peg-inp').value='';
   document.getElementById('absen-peg-drop').classList.remove('show');
   renderAbsenPegTags();
@@ -3281,6 +3383,9 @@ function resetAbsensi(){
   document.getElementById('absen-step3').style.display='none';
   document.getElementById('absen-preview-box').className='ubah-info-box';
   document.getElementById('btn-absen').disabled=true;
+  document.getElementById('absen-tgl-akhir').value='';
+  document.getElementById('absen-tgl-info').style.display='none';
+  absenSetTglMode('single');
   document.getElementById('absen-history-wrap').style.display='none';
 }
 
