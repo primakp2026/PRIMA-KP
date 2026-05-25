@@ -784,8 +784,12 @@ Pegawai yang ditugaskan WFO pada hari Jumat dapat melaksanakan WFH pada hari Rab
         <button onclick="resetAbsensi()" style="background:none;border:1.5px solid #e2e7f3;border-radius:10px;padding:10px 18px;font-size:0.82rem;font-weight:600;color:var(--text-dim);cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;">↺ Reset</button>
       </div>
       <!-- Riwayat absensi pegawai terpilih -->
+      <!-- Riwayat absensi pegawai terpilih -->
       <div id="absen-history-wrap" style="display:none;margin-top:18px;">
-        <div style="font-size:0.75rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-dim);margin-bottom:10px;">Riwayat Absensi Bulan Ini</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+          <div style="font-size:0.75rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-dim);">Riwayat Absensi Bulan Ini</div>
+          <div style="font-size:0.72rem;color:var(--text-dim);">✏️ Klik <strong>Ubah</strong> untuk koreksi, 🗑️ untuk hapus</div>
+        </div>
         <div id="absen-history-list"></div>
       </div>
     </div>
@@ -3126,6 +3130,9 @@ function absenPilihPegawai(nip){
   document.getElementById('absen-step3').style.display='block';
   renderAbsenCodeGrid();
   updateAbsenPreview();
+  // Jika hanya 1 pegawai dipilih, tampilkan riwayat absensinya langsung
+  if(AB_pegawaiList.length===1) loadAbsenHistory(AB_pegawaiList[0].nip);
+  else document.getElementById('absen-history-wrap').style.display='none';
 }
 
 function renderAbsenPegTags(){
@@ -3354,14 +3361,123 @@ async function loadAbsenHistory(nip){
   list.innerHTML=data.map(r=>{
     const info=KODE_MAP[r.kode]||{cssClass:'chip-wfo',label:r.kode};
     const d=new Date(r.tanggal+'T00:00:00');
-    return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #f0f3ff;">
+    return `<div style="display:flex;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid #f0f3ff;flex-wrap:wrap;">
       <span style="font-size:0.8rem;font-weight:600;color:var(--navy);min-width:120px;">${HARI[d.getDay()]}, ${fmtTgl(r.tanggal)}</span>
       <span class="jadwal-name-chip ${info.cssClass}" style="border-radius:8px;padding:3px 10px;">${r.kode}</span>
-      <span style="font-size:0.78rem;color:var(--text-dim);">${r.keterangan||'—'}</span>
-      <button onclick="hapusAbsensi('${nip}','${r.tanggal}')" style="margin-left:auto;background:none;border:1px solid #fca5a5;border-radius:6px;padding:3px 8px;font-size:0.72rem;color:#dc2626;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;">Hapus</button>
+      <span style="font-size:0.78rem;color:var(--text-dim);flex:1;">${r.keterangan||'—'}</span>
+      <div style="display:flex;gap:6px;margin-left:auto;">
+        <button onclick="bukaEditAbsensi('${nip}','${r.tanggal}','${r.kode}',\`${(r.keterangan||'').replace(/`/g,'\\`')}\`)" style="background:rgba(10,22,40,0.07);border:1px solid #c8d4ea;border-radius:6px;padding:3px 10px;font-size:0.72rem;color:var(--navy);cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;font-weight:600;">✏️ Ubah</button>
+        <button onclick="hapusAbsensi('${nip}','${r.tanggal}')" style="background:none;border:1px solid #fca5a5;border-radius:6px;padding:3px 10px;font-size:0.72rem;color:#dc2626;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;font-weight:600;">🗑️ Hapus</button>
+      </div>
     </div>`;
   }).join('');
 }
+
+/* ══ MODAL EDIT ABSENSI ══ */
+function bukaEditAbsensi(nip, tanggal, kodeSekarang, keteranganSekarang){
+  // Set state modal
+  EDIT_AB = { nip, tanggal, kode: kodeSekarang, keterangan: keteranganSekarang };
+
+  // Render pilihan kode absensi di modal
+  const grid = document.getElementById('edit-absen-code-grid');
+  if(grid){
+    grid.innerHTML = KODE_ABSENSI.map(k=>`
+      <div class="absen-code-btn ${k.kode===kodeSekarang?'selected':''}" onclick="editAbsenPilihKode('${k.kode}')">
+        <span class="code-label">${k.kode}</span>
+        <span class="code-desc">${k.label}</span>
+      </div>`).join('');
+  }
+
+  // Set keterangan
+  const ketInp = document.getElementById('edit-absen-ket-inp');
+  if(ketInp) ketInp.value = keteranganSekarang || '';
+
+  // Set header info
+  const d = new Date(tanggal+'T00:00:00');
+  document.getElementById('edit-absen-info').textContent =
+    (HARI[d.getDay()]||'')+', '+fmtTgl(tanggal)+' — kode saat ini: '+kodeSekarang;
+
+  // Tampilkan/sembunyikan ket wrap
+  updateEditAbsenKetWrap();
+
+  // Tampilkan modal
+  document.getElementById('modal-edit-absensi').style.display='flex';
+}
+
+function editAbsenPilihKode(kode){
+  EDIT_AB.kode = kode;
+  const grid = document.getElementById('edit-absen-code-grid');
+  if(grid){
+    grid.querySelectorAll('.absen-code-btn').forEach(el=>{
+      el.classList.toggle('selected', el.querySelector('.code-label').textContent===kode);
+    });
+  }
+  updateEditAbsenKetWrap();
+}
+
+function updateEditAbsenKetWrap(){
+  const info = KODE_MAP[EDIT_AB.kode];
+  const wrap = document.getElementById('edit-absen-ket-wrap');
+  const req  = document.getElementById('edit-absen-ket-req');
+  const inp  = document.getElementById('edit-absen-ket-inp');
+  if(!wrap) return;
+  if(EDIT_AB.kode){
+    wrap.classList.add('show');
+    if(info && info.wajibKet){
+      req.style.display='flex';
+      inp.placeholder='Wajib: isi keterangan / detail '+EDIT_AB.kode+'...';
+    } else {
+      req.style.display='none';
+      inp.placeholder='Opsional: keterangan tambahan...';
+    }
+  } else {
+    wrap.classList.remove('show');
+  }
+}
+
+function tutupEditAbsensi(){
+  document.getElementById('modal-edit-absensi').style.display='none';
+  EDIT_AB = {};
+}
+
+async function simpanEditAbsensi(){
+  if(!EDIT_AB.nip||!EDIT_AB.tanggal||!EDIT_AB.kode) return;
+  const ket = document.getElementById('edit-absen-ket-inp').value.trim();
+  const info = KODE_MAP[EDIT_AB.kode];
+  if(info && info.wajibKet && !ket)
+    return swal('Keterangan Wajib','Kode '+EDIT_AB.kode+' harus disertai keterangan.','warning');
+
+  // Cari nama pegawai
+  const peg = (S.pegawaiAll||[]).find(p=>p.nip===EDIT_AB.nip) || {nama:''};
+  const payload = {
+    nip: EDIT_AB.nip,
+    nama: peg.nama || EDIT_AB.nip,
+    tanggal: EDIT_AB.tanggal,
+    kode: EDIT_AB.kode,
+    keterangan: ket
+  };
+
+  showLoad(true);
+  const {ok,err} = await db.from('absensi_keterangan').upsert(payload,'nip,tanggal');
+  showLoad(false);
+
+  if(!ok) return swal('Gagal','Gagal menyimpan perubahan: '+(err||'Error'),'error');
+
+  // Update cache lokal
+  S.absensiAll = S.absensiAll.filter(r=>!(r.nip===EDIT_AB.nip&&r.tanggal===EDIT_AB.tanggal));
+  S.absensiAll.push(payload);
+
+  alog('ok',`✏️ Edit absensi ${EDIT_AB.nip} (${EDIT_AB.tanggal}) → ${EDIT_AB.kode}`);
+
+  tutupEditAbsensi();
+
+  // Reload riwayat jika hanya satu pegawai yang tampil di history
+  if(AB_pegawaiList.length===1) loadAbsenHistory(AB_pegawaiList[0].nip);
+
+  swal('Berhasil','Keterangan absensi berhasil diubah.','success');
+}
+
+let EDIT_AB = {};
 
 async function hapusAbsensi(nip,tanggal){
   const {isConfirmed}=await Swal.fire({title:'Hapus keterangan?',text:tanggal,icon:'warning',showCancelButton:true,confirmButtonText:'Ya, Hapus',confirmButtonColor:'#ef4444'});
@@ -4109,3 +4225,28 @@ async function doResetPasswordDefault(){
 </script>
 </body>
 </html>
+
+<!-- MODAL EDIT ABSENSI -->
+<div id="modal-edit-absensi" class="modal-overlay" style="display:none;">
+  <div class="modal-card" style="max-width:560px;">
+    <h3>✏️ Ubah Keterangan Absensi</h3>
+    <p class="modal-sub" id="edit-absen-info" style="font-weight:600;color:var(--navy);font-size:0.85rem;"></p>
+
+    <!-- Pilih kode absensi baru -->
+    <div style="margin-bottom:18px;">
+      <div class="field-label" style="margin-bottom:12px;">Pilih Kode Absensi Baru</div>
+      <div class="absen-code-grid" id="edit-absen-code-grid"></div>
+    </div>
+
+    <!-- Keterangan -->
+    <div class="absen-keterangan-wrap" id="edit-absen-ket-wrap">
+      <div class="absen-required-note" id="edit-absen-ket-req">⚠️ Keterangan wajib diisi untuk kode ini</div>
+      <textarea id="edit-absen-ket-inp" class="absen-keterangan-inp" placeholder="Isi keterangan / detail..." oninput="EDIT_AB.keterangan=this.value.trim();"></textarea>
+    </div>
+
+    <div class="modal-actions" style="margin-top:18px;">
+      <button class="btn-modal-cancel" onclick="tutupEditAbsensi()">Batal</button>
+      <button class="btn-modal-submit" onclick="simpanEditAbsensi()" style="background:var(--mint);">💾 Simpan Perubahan</button>
+    </div>
+  </div>
+</div>
