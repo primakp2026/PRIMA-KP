@@ -1379,11 +1379,14 @@ function getBulanTarget() {
 async function initCal() {
   showLoad(true);
   try {
+    const bt0=getBulanTarget();
+    const tA0=bt0.y+'-'+String(bt0.m+1).padStart(2,'0')+'-01';
+    const tB0=bt0.y+'-'+String(bt0.m+1).padStart(2,'0')+'-'+new Date(bt0.y,bt0.m+1,0).getDate();
     const [pRes,wRes,lRes,aRes]=await Promise.all([
       db.from('pegawai').sel('nip,nama,tim_kerja').ord('nama').get(),
-      db.from('pilihan_wfh').sel('nip,nama,tanggal_wfh,kode_absensi').get(),
+      db.from('pilihan_wfh').sel('nip,nama,tanggal_wfh,kode_absensi').gte('tanggal_wfh',tA0).lte('tanggal_wfh',tB0).get(),
       db.from('libur_nasional').sel('tanggal,keterangan').get(),
-      db.from('absensi_keterangan').sel('nip,nama,tanggal,kode,keterangan').get(),
+      db.from('absensi_keterangan').sel('nip,nama,tanggal,kode,keterangan').gte('tanggal',tA0).lte('tanggal',tB0).get(),
     ]);
     S.totalPeg = pRes.data?.length||0;
     S.wfhAll   = wRes.data||[];
@@ -1680,11 +1683,10 @@ async function daftarWFH(ds,hari){
   showLoad(false);
   if(!ok) return swal('Gagal','Error: '+err,'error');
   await Swal.fire({title:'Berhasil! 🎉',text:'Jadwal WFH '+fmtTgl(ds)+' tersimpan.',icon:'success',confirmButtonColor:'#0a1628'});
-  const wRes=await db.from('pilihan_wfh').sel('nip,nama,tanggal_wfh').get();
-  S.wfhAll=wRes.data||[];
-  refreshDayBadges();
-  renderJadwalRekan();
   const bt=getBulanTarget();
+  const tglAwal=bt.y+'-'+String(bt.m+1).padStart(2,'0')+'-01';
+  const tglAkhir=bt.y+'-'+String(bt.m+1).padStart(2,'0')+'-'+new Date(bt.y,bt.m+1,0).getDate();
+  const wRes=await db.from('pilihan_wfh').sel('nip,nama,tanggal_wfh').gte('tanggal_wfh',tglAwal).lte('tanggal_wfh',tglAkhir).get();
   const wfhku=S.wfhAll.filter(r=>{if(r.nip!==S.nip)return false;const d=new Date(r.tanggal_wfh+'T00:00:00');return d.getFullYear()===bt.y&&d.getMonth()===bt.m;});
   document.getElementById('s-wfhku').textContent=wfhku.length;
   document.getElementById('s-wfhtgl').textContent=wfhku.length?wfhku.map(r=>new Date(r.tanggal_wfh+'T00:00:00').getDate()).join(', ')+' '+BULAN[bt.m]:'Belum ada jadwal '+BULAN[bt.m];
@@ -1705,11 +1707,13 @@ async function batalWFH(ds){
   showLoad(false);
   if(!ok) return swal('Gagal','Error: '+err,'error');
   await Swal.fire({title:'Dibatalkan',text:'Jadwal WFH '+fmtTgl(ds)+' telah dibatalkan.',icon:'success',confirmButtonColor:'#0a1628'});
-  const wRes=await db.from('pilihan_wfh').sel('nip,nama,tanggal_wfh').get();
+  const bt2=getBulanTarget();
+  const tglAwal2=bt2.y+'-'+String(bt2.m+1).padStart(2,'0')+'-01';
+  const tglAkhir2=bt2.y+'-'+String(bt2.m+1).padStart(2,'0')+'-'+new Date(bt2.y,bt2.m+1,0).getDate();
+  const wRes=await db.from('pilihan_wfh').sel('nip,nama,tanggal_wfh').gte('tanggal_wfh',tglAwal2).lte('tanggal_wfh',tglAkhir2).get();
   S.wfhAll=wRes.data||[];
   refreshDayBadges();
   renderJadwalRekan();
-  const bt2=getBulanTarget();
   const wfhku=S.wfhAll.filter(r=>{if(r.nip!==S.nip)return false;const d=new Date(r.tanggal_wfh+'T00:00:00');return d.getFullYear()===bt2.y&&d.getMonth()===bt2.m;});
   document.getElementById('s-wfhku').textContent=wfhku.length;
   document.getElementById('s-wfhtgl').textContent=wfhku.length?wfhku.map(r=>new Date(r.tanggal_wfh+'T00:00:00').getDate()).join(', ')+' '+BULAN[bt2.m]:'Belum ada jadwal '+BULAN[bt2.m];
@@ -1911,9 +1915,12 @@ function setUbahMode(mode){
 // Dipanggil setelah PIN OK — load data pegawai & wfh untuk UB dan TX
 async function initUbahData(){
   try {
+    const btU=getBulanTarget();
+    const tAU=btU.y+'-'+String(btU.m+1).padStart(2,'0')+'-01';
+    const tBU=btU.y+'-'+String(btU.m+1).padStart(2,'0')+'-'+new Date(btU.y,btU.m+1,0).getDate();
     const [pRes,wRes] = await Promise.all([
       db.from('pegawai').sel('nip,nama,tim_kerja').ord('nama').get(),
-      db.from('pilihan_wfh').sel('nip,nama,tanggal_wfh,is_tukar').get(),
+      db.from('pilihan_wfh').sel('nip,nama,tanggal_wfh,is_tukar').gte('tanggal_wfh',tAU).lte('tanggal_wfh',tBU).get(),
     ]);
     UB.pegawaiList = pRes.data||[];
     UB.wfhAll = wRes.data||[];
@@ -2239,7 +2246,10 @@ async function eksekusiUbah(){
         ? 'Jadwal ditambahkan: '+UB.pegawai.nama+' → '+UB.tglBaru
         : 'Jadwal diubah: '+UB.pegawai.nama+' → '+UB.tglBaru);
       // Refresh shared data
-      const wRes=await db.from('pilihan_wfh').sel('nip,nama,tanggal_wfh,is_tukar').get();
+      const btR=getBulanTarget();
+      const tAR=btR.y+'-'+String(btR.m+1).padStart(2,'0')+'-01';
+      const tBR=btR.y+'-'+String(btR.m+1).padStart(2,'0')+'-'+new Date(btR.y,btR.m+1,0).getDate();
+      const wRes=await db.from('pilihan_wfh').sel('nip,nama,tanggal_wfh,is_tukar').gte('tanggal_wfh',tAR).lte('tanggal_wfh',tBR).get();
       UB.wfhAll=wRes.data||[];
       S.wfhAll=UB.wfhAll;
       await initTukar();
@@ -2493,7 +2503,10 @@ async function eksekusiTukar(){
         <span style="font-size:0.82rem;">${TX.a.nama}: jadwal berpindah ke <b>${dtB.getDate()} ${BULAN[dtB.getMonth()]}</b> 🔄<br>
         ${TX.b.nama}: jadwal berpindah ke <b>${dtA.getDate()} ${BULAN[dtA.getMonth()]}</b> 🔄</span>`;
       alog('ok','Tukar jadwal berhasil: '+TX.a.nama+' ('+dA+') ↔ '+TX.b.nama+' ('+dB+')');
-      const wRes=await db.from('pilihan_wfh').sel('nip,nama,tanggal_wfh,is_tukar').get();
+      const btT=getBulanTarget();
+      const tAT=btT.y+'-'+String(btT.m+1).padStart(2,'0')+'-01';
+      const tBT=btT.y+'-'+String(btT.m+1).padStart(2,'0')+'-'+new Date(btT.y,btT.m+1,0).getDate();
+      const wRes=await db.from('pilihan_wfh').sel('nip,nama,tanggal_wfh,is_tukar').gte('tanggal_wfh',tAT).lte('tanggal_wfh',tBT).get();
       S.wfhAll=wRes.data||[];
       UB.wfhAll=wRes.data||[];
       await initTukar();
@@ -3027,16 +3040,21 @@ function switchTab(name) {
   if(name==='jadwal-rekan'){
     if(!_jrBulan){ const now=new Date(); _jrBulan={y:now.getFullYear(),m:now.getMonth()}; }
     renderJadwalRekan();
-    db.from('pilihan_wfh').sel('nip,nama,tanggal_wfh,kode_absensi').get().then(wRes=>{
+    const btJR=getBulanTarget();
+    const tAJR=btJR.y+'-'+String(btJR.m+1).padStart(2,'0')+'-01';
+    const tBJR=btJR.y+'-'+String(btJR.m+1).padStart(2,'0')+'-'+new Date(btJR.y,btJR.m+1,0).getDate();
+    db.from('pilihan_wfh').sel('nip,nama,tanggal_wfh,kode_absensi').gte('tanggal_wfh',tAJR).lte('tanggal_wfh',tBJR).get().then(wRes=>{
       if(wRes.ok){ S.wfhAll=wRes.data||[]; renderJadwalRekan(); }
     }).catch(()=>{});
   }
   if(name==='jadwal-harian'){
-    // Tampilkan dulu dengan data yang ada, lalu refresh dari server
     renderJadwalHarian();
+    const btJH=getBulanTarget();
+    const tAJH=btJH.y+'-'+String(btJH.m+1).padStart(2,'0')+'-01';
+    const tBJH=btJH.y+'-'+String(btJH.m+1).padStart(2,'0')+'-'+new Date(btJH.y,btJH.m+1,0).getDate();
     Promise.all([
-      db.from('pilihan_wfh').sel('nip,nama,tanggal_wfh,kode_absensi').get(),
-      db.from('absensi_keterangan').sel('nip,nama,tanggal,kode,keterangan').get(),
+      db.from('pilihan_wfh').sel('nip,nama,tanggal_wfh,kode_absensi').gte('tanggal_wfh',tAJH).lte('tanggal_wfh',tBJH).get(),
+      db.from('absensi_keterangan').sel('nip,nama,tanggal,kode,keterangan').gte('tanggal',tAJH).lte('tanggal',tBJH).get(),
     ]).then(([wRes,aRes])=>{
       if(wRes.ok) S.wfhAll = wRes.data||[];
       if(aRes.ok) S.absensiAll = aRes.data||[];
@@ -3045,9 +3063,12 @@ function switchTab(name) {
   }
   if(name==='jadwal-mingguan'){
     renderJadwalMingguan();
+    const btJM=getBulanTarget();
+    const tAJM=btJM.y+'-'+String(btJM.m+1).padStart(2,'0')+'-01';
+    const tBJM=btJM.y+'-'+String(btJM.m+1).padStart(2,'0')+'-'+new Date(btJM.y,btJM.m+1,0).getDate();
     Promise.all([
-      db.from('pilihan_wfh').sel('nip,nama,tanggal_wfh,kode_absensi').get(),
-      db.from('absensi_keterangan').sel('nip,nama,tanggal,kode,keterangan').get(),
+      db.from('pilihan_wfh').sel('nip,nama,tanggal_wfh,kode_absensi').gte('tanggal_wfh',tAJM).lte('tanggal_wfh',tBJM).get(),
+      db.from('absensi_keterangan').sel('nip,nama,tanggal,kode,keterangan').gte('tanggal',tAJM).lte('tanggal',tBJM).get(),
     ]).then(([wRes,aRes])=>{
       if(wRes.ok) S.wfhAll = wRes.data||[];
       if(aRes.ok) S.absensiAll = aRes.data||[];
