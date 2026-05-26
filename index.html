@@ -1687,6 +1687,9 @@ async function daftarWFH(ds,hari){
   const tglAwal=bt.y+'-'+String(bt.m+1).padStart(2,'0')+'-01';
   const tglAkhir=bt.y+'-'+String(bt.m+1).padStart(2,'0')+'-'+new Date(bt.y,bt.m+1,0).getDate();
   const wRes=await db.from('pilihan_wfh').sel('nip,nama,tanggal_wfh').gte('tanggal_wfh',tglAwal).lte('tanggal_wfh',tglAkhir).get();
+  S.wfhAll=wRes.data||[];
+  refreshDayBadges();
+  renderJadwalRekan();
   const wfhku=S.wfhAll.filter(r=>{if(r.nip!==S.nip)return false;const d=new Date(r.tanggal_wfh+'T00:00:00');return d.getFullYear()===bt.y&&d.getMonth()===bt.m;});
   document.getElementById('s-wfhku').textContent=wfhku.length;
   document.getElementById('s-wfhtgl').textContent=wfhku.length?wfhku.map(r=>new Date(r.tanggal_wfh+'T00:00:00').getDate()).join(', ')+' '+BULAN[bt.m]:'Belum ada jadwal '+BULAN[bt.m];
