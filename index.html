@@ -1379,9 +1379,13 @@ function getBulanTarget() {
 async function initCal() {
   showLoad(true);
   try {
+    const now = new Date();
     const bt0=getBulanTarget();
-    const tA0=bt0.y+'-'+String(bt0.m+1).padStart(2,'0')+'-01';
-    const tB0=bt0.y+'-'+String(bt0.m+1).padStart(2,'0')+'-'+new Date(bt0.y,bt0.m+1,0).getDate();
+    // Muat data dari bulan ini + bulan target (bulan depan) sekaligus
+    // agar tab Harian & Mingguan langsung bisa menampilkan data hari ini
+    const nowY = now.getFullYear(), nowM = now.getMonth();
+    const tA0 = nowY+'-'+String(nowM+1).padStart(2,'0')+'-01';
+    const tB0 = bt0.y+'-'+String(bt0.m+1).padStart(2,'0')+'-'+new Date(bt0.y,bt0.m+1,0).getDate();
     const [pRes,wRes,lRes,aRes]=await Promise.all([
       db.from('pegawai').sel('nip,nama,tim_kerja').ord('nama').get(),
       db.from('pilihan_wfh').sel('nip,nama,tanggal_wfh,kode_absensi').gte('tanggal_wfh',tA0).lte('tanggal_wfh',tB0).get(),
@@ -1547,12 +1551,17 @@ function jadwalRekanNav(delta){
   if(m < 0){ m = 11; y--; }
   _jrBulan = { y, m };
   renderJadwalRekan();
+  // Re-fetch data untuk bulan baru
+  const {tA,tB} = rangeForBulan(y, m);
+  fetchDataForRange(tA, tB).then(()=>renderJadwalRekan()).catch(()=>{});
 }
 
 function jadwalRekanGoToday(){
   const now = new Date();
   _jrBulan = { y: now.getFullYear(), m: now.getMonth() };
   renderJadwalRekan();
+  const {tA,tB} = rangeForBulan(now.getFullYear(), now.getMonth());
+  fetchDataForRange(tA, tB).then(()=>renderJadwalRekan()).catch(()=>{});
 }
 
 // ── Render tabel jadwal seluruh rekan ────────────────────────────────────────
@@ -3032,6 +3041,34 @@ function buildXlsxData(tahun,bulan,pegawai,wfhMap,tukarMap,absenMap,timOrder,grp
 /* ══════════════════════════════════════════════
    HELPERS
    ══════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════
+   HELPER — fetch WFH + absensi untuk rentang tanggal tertentu
+   ══════════════════════════════════════════════ */
+async function fetchDataForRange(tA, tB) {
+  const [wRes, aRes] = await Promise.all([
+    db.from('pilihan_wfh').sel('nip,nama,tanggal_wfh,kode_absensi').gte('tanggal_wfh',tA).lte('tanggal_wfh',tB).get(),
+    db.from('absensi_keterangan').sel('nip,nama,tanggal,kode,keterangan').gte('tanggal',tA).lte('tanggal',tB).get(),
+  ]);
+  if(wRes.ok) S.wfhAll   = wRes.data||[];
+  if(aRes.ok) S.absensiAll = aRes.data||[];
+}
+
+/* Hitung rentang tanggal untuk bulan {y, m} */
+function rangeForBulan(y, m) {
+  const tA = y+'-'+String(m+1).padStart(2,'0')+'-01';
+  const tB = y+'-'+String(m+1).padStart(2,'0')+'-'+new Date(y,m+1,0).getDate();
+  return {tA, tB};
+}
+
+/* Hitung rentang tanggal untuk minggu yang mengandung tanggal d (Senin–Minggu) */
+function rangeForMinggu(d) {
+  const day = d.getDay();
+  const diff = day===0 ? -6 : 1-day;
+  const senin = new Date(d); senin.setDate(d.getDate()+diff);
+  const minggu = new Date(senin); minggu.setDate(senin.getDate()+6);
+  return { tA: toLocalISO(senin), tB: toLocalISO(minggu) };
+}
+
 function switchTab(name) {
   S.activeTab = name;
   document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
@@ -3040,44 +3077,32 @@ function switchTab(name) {
   if(tabBtn) tabBtn.classList.add('active');
   const pane = document.getElementById('tab-'+name);
   if(pane) pane.classList.add('active');
+
   if(name==='jadwal-rekan'){
     if(!_jrBulan){ const now=new Date(); _jrBulan={y:now.getFullYear(),m:now.getMonth()}; }
     renderJadwalRekan();
-    const btJR=getBulanTarget();
-    const tAJR=btJR.y+'-'+String(btJR.m+1).padStart(2,'0')+'-01';
-    const tBJR=btJR.y+'-'+String(btJR.m+1).padStart(2,'0')+'-'+new Date(btJR.y,btJR.m+1,0).getDate();
-    db.from('pilihan_wfh').sel('nip,nama,tanggal_wfh,kode_absensi').gte('tanggal_wfh',tAJR).lte('tanggal_wfh',tBJR).get().then(wRes=>{
-      if(wRes.ok){ S.wfhAll=wRes.data||[]; renderJadwalRekan(); }
-    }).catch(()=>{});
+    // Fetch data sesuai bulan yang sedang ditampilkan di tab Jadwal Rekan
+    const {tA,tB} = rangeForBulan(_jrBulan.y, _jrBulan.m);
+    db.from('pilihan_wfh').sel('nip,nama,tanggal_wfh,kode_absensi').gte('tanggal_wfh',tA).lte('tanggal_wfh',tB).get()
+      .then(wRes=>{ if(wRes.ok){ S.wfhAll=wRes.data||[]; renderJadwalRekan(); } })
+      .catch(()=>{});
   }
+
   if(name==='jadwal-harian'){
     renderJadwalHarian();
-    const btJH=getBulanTarget();
-    const tAJH=btJH.y+'-'+String(btJH.m+1).padStart(2,'0')+'-01';
-    const tBJH=btJH.y+'-'+String(btJH.m+1).padStart(2,'0')+'-'+new Date(btJH.y,btJH.m+1,0).getDate();
-    Promise.all([
-      db.from('pilihan_wfh').sel('nip,nama,tanggal_wfh,kode_absensi').gte('tanggal_wfh',tAJH).lte('tanggal_wfh',tBJH).get(),
-      db.from('absensi_keterangan').sel('nip,nama,tanggal,kode,keterangan').gte('tanggal',tAJH).lte('tanggal',tBJH).get(),
-    ]).then(([wRes,aRes])=>{
-      if(wRes.ok) S.wfhAll = wRes.data||[];
-      if(aRes.ok) S.absensiAll = aRes.data||[];
-      renderJadwalHarian();
-    }).catch(()=>{});
+    // Fetch data sesuai bulan dari tanggal harian yang sedang dilihat
+    const jh = S.jhDate;
+    const {tA,tB} = rangeForBulan(jh.getFullYear(), jh.getMonth());
+    fetchDataForRange(tA, tB).then(()=>renderJadwalHarian()).catch(()=>{});
   }
+
   if(name==='jadwal-mingguan'){
     renderJadwalMingguan();
-    const btJM=getBulanTarget();
-    const tAJM=btJM.y+'-'+String(btJM.m+1).padStart(2,'0')+'-01';
-    const tBJM=btJM.y+'-'+String(btJM.m+1).padStart(2,'0')+'-'+new Date(btJM.y,btJM.m+1,0).getDate();
-    Promise.all([
-      db.from('pilihan_wfh').sel('nip,nama,tanggal_wfh,kode_absensi').gte('tanggal_wfh',tAJM).lte('tanggal_wfh',tBJM).get(),
-      db.from('absensi_keterangan').sel('nip,nama,tanggal,kode,keterangan').gte('tanggal',tAJM).lte('tanggal',tBJM).get(),
-    ]).then(([wRes,aRes])=>{
-      if(wRes.ok) S.wfhAll = wRes.data||[];
-      if(aRes.ok) S.absensiAll = aRes.data||[];
-      renderJadwalMingguan();
-    }).catch(()=>{});
+    // Fetch data sesuai rentang minggu yang sedang ditampilkan
+    const {tA,tB} = rangeForMinggu(S.jmDate);
+    fetchDataForRange(tA, tB).then(()=>renderJadwalMingguan()).catch(()=>{});
   }
+
   if(name==='pengajuan-saya') loadPengajuanSaya();
 }
 
@@ -3560,9 +3585,31 @@ function buildStatusMap(ds){
    JADWAL HARIAN
    ══════════════════════════════════════════════ */
 function jadwalHarianNav(delta){
-  const d=new Date(S.jhDate); d.setDate(d.getDate()+delta); S.jhDate=d; renderJadwalHarian();
+  const prev = new Date(S.jhDate);
+  const d = new Date(S.jhDate);
+  d.setDate(d.getDate()+delta);
+  S.jhDate = d;
+  // Re-fetch jika pindah bulan
+  if(prev.getMonth()!==d.getMonth() || prev.getFullYear()!==d.getFullYear()){
+    renderJadwalHarian();
+    const {tA,tB} = rangeForBulan(d.getFullYear(), d.getMonth());
+    fetchDataForRange(tA, tB).then(()=>renderJadwalHarian()).catch(()=>{});
+  } else {
+    renderJadwalHarian();
+  }
 }
-function jadwalHarianGoToday(){ S.jhDate=new Date(); renderJadwalHarian(); }
+function jadwalHarianGoToday(){
+  const prev = new Date(S.jhDate);
+  S.jhDate = new Date();
+  const d = S.jhDate;
+  if(prev.getMonth()!==d.getMonth() || prev.getFullYear()!==d.getFullYear()){
+    renderJadwalHarian();
+    const {tA,tB} = rangeForBulan(d.getFullYear(), d.getMonth());
+    fetchDataForRange(tA, tB).then(()=>renderJadwalHarian()).catch(()=>{});
+  } else {
+    renderJadwalHarian();
+  }
+}
 
 function renderJadwalHarian(){
   const d=S.jhDate;
@@ -3669,9 +3716,17 @@ function renderJadwalHarian(){
    JADWAL MINGGUAN
    ══════════════════════════════════════════════ */
 function jadwalMingguanNav(delta){
-  const d=new Date(S.jmDate); d.setDate(d.getDate()+delta*7); S.jmDate=d; renderJadwalMingguan();
+  const d=new Date(S.jmDate); d.setDate(d.getDate()+delta*7); S.jmDate=d;
+  renderJadwalMingguan();
+  const {tA,tB} = rangeForMinggu(d);
+  fetchDataForRange(tA, tB).then(()=>renderJadwalMingguan()).catch(()=>{});
 }
-function jadwalMingguanGoToday(){ S.jmDate=new Date(); renderJadwalMingguan(); }
+function jadwalMingguanGoToday(){
+  S.jmDate=new Date();
+  renderJadwalMingguan();
+  const {tA,tB} = rangeForMinggu(S.jmDate);
+  fetchDataForRange(tA, tB).then(()=>renderJadwalMingguan()).catch(()=>{});
+}
 
 function renderJadwalMingguan(){
   const d=new Date(S.jmDate);
