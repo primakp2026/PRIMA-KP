@@ -790,17 +790,39 @@ Pegawai yang ditugaskan WFO pada hari Jumat dapat melaksanakan WFH pada hari Rab
           <div style="font-size:0.72rem;color:var(--text-dim);">✏️ Klik <strong>Ubah</strong> untuk koreksi, 🗑️ untuk hapus</div>
         </div>
         <!-- Filter bulan & tahun -->
-        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px;padding:12px 14px;background:#f5f7fc;border-radius:12px;border:1px solid #e2e7f3;">
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px;padding:12px 14px;background:#f5f7fc;border-radius:12px;border:1px solid #e2e7f3;">
           <span style="font-size:0.72rem;font-weight:700;color:var(--navy-light);letter-spacing:0.05em;text-transform:uppercase;">Tampilkan:</span>
-          <select id="absen-hist-bulan" class="admin-sel" style="max-width:140px;padding:8px 12px;font-size:0.82rem;">
+          <select id="absen-hist-bulan" class="admin-sel" style="max-width:140px;padding:8px 12px;font-size:0.82rem;"
+            onchange="absenHistSaveFilter()">
             <option value="1">Januari</option><option value="2">Februari</option><option value="3">Maret</option>
             <option value="4">April</option><option value="5">Mei</option><option value="6">Juni</option>
             <option value="7">Juli</option><option value="8">Agustus</option><option value="9">September</option>
             <option value="10">Oktober</option><option value="11">November</option><option value="12">Desember</option>
           </select>
-          <select id="absen-hist-tahun" class="admin-sel" style="max-width:100px;padding:8px 12px;font-size:0.82rem;"></select>
+          <select id="absen-hist-tahun" class="admin-sel" style="max-width:100px;padding:8px 12px;font-size:0.82rem;"
+            onchange="absenHistSaveFilter()"></select>
           <button onclick="absenHistFilter()" class="btn-save" style="padding:8px 18px;font-size:0.82rem;">🔍 Lihat</button>
           <button onclick="absenHistFilterBulanIni()" style="background:none;border:1.5px solid #c8d4ea;border-radius:10px;padding:8px 14px;font-size:0.78rem;font-weight:600;color:var(--text-dim);cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;">Bulan Ini</button>
+        </div>
+        <!-- Toolbar hapus massal -->
+        <div id="absen-bulk-bar" style="display:none;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px;padding:10px 14px;background:#fff5f5;border-radius:10px;border:1.5px solid #fca5a5;">
+          <label style="display:flex;align-items:center;gap:7px;font-size:0.8rem;font-weight:600;color:var(--navy);cursor:pointer;">
+            <input type="checkbox" id="absen-check-all" onchange="absenToggleAllCheck(this.checked)" style="width:15px;height:15px;accent-color:#ef4444;cursor:pointer;">
+            Pilih Semua
+          </label>
+          <span id="absen-bulk-count" style="font-size:0.78rem;color:var(--text-dim);flex:1;">0 dipilih</span>
+          <button onclick="hapusAbsensiMassal()" id="btn-hapus-massal" disabled
+            style="background:#ef4444;color:white;border:none;border-radius:9px;padding:7px 16px;font-size:0.78rem;font-weight:700;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;transition:opacity 0.2s;"
+            onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
+            🗑️ Hapus Terpilih
+          </button>
+          <button onclick="absenBulkMode(false)" style="background:none;border:1.5px solid #c8d4ea;border-radius:9px;padding:7px 14px;font-size:0.78rem;font-weight:600;color:var(--text-dim);cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;">Batal</button>
+        </div>
+        <!-- Tombol aktifkan mode pilih -->
+        <div id="absen-bulk-trigger" style="margin-bottom:10px;">
+          <button onclick="absenBulkMode(true)" style="background:none;border:1.5px solid #fca5a5;border-radius:9px;padding:6px 14px;font-size:0.75rem;font-weight:700;color:#dc2626;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;">
+            ☑️ Pilih & Hapus Banyak
+          </button>
         </div>
         <div id="absen-history-list"></div>
       </div>
@@ -3192,8 +3214,13 @@ function absenPilihPegawai(nip){
   renderAbsenCodeGrid();
   updateAbsenPreview();
   // Jika hanya 1 pegawai dipilih, tampilkan riwayat absensinya langsung
-  if(AB_pegawaiList.length===1) loadAbsenHistory(AB_pegawaiList[0].nip);
-  else document.getElementById('absen-history-wrap').style.display='none';
+  if(AB_pegawaiList.length===1){
+    // Pegawai baru dipilih pertama kali → reset ke bulan saat ini
+    const now=new Date();
+    _absenHistY=now.getFullYear(); _absenHistM=now.getMonth()+1;
+    _absenBulkMode=false; _absenChecked.clear();
+    loadAbsenHistory(AB_pegawaiList[0].nip);
+  } else document.getElementById('absen-history-wrap').style.display='none';
 }
 
 function renderAbsenPegTags(){
@@ -3410,91 +3437,197 @@ async function simpanAbsensi(){
 }
 
 /* ══════════════════════════════════════════════
-   RIWAYAT ABSENSI — dengan filter bulan & tahun
+   RIWAYAT ABSENSI — filter bulan & tahun + hapus massal
    ══════════════════════════════════════════════ */
 
-// NIP pegawai yang sedang dilihat riwayatnya (agar bisa re-load saat filter berubah)
-let _absenHistNip = '';
+// State riwayat — disimpan di JS, TIDAK dibaca ulang dari DOM
+let _absenHistNip  = '';
+let _absenHistY    = new Date().getFullYear();
+let _absenHistM    = new Date().getMonth() + 1;
+let _absenBulkMode = false;      // mode pilih & hapus massal
+let _absenChecked  = new Set();  // set tanggal yang dicentang
 
-function initAbsenHistFilter(){
-  const now = new Date();
-  const selB = document.getElementById('absen-hist-bulan');
+/* ── Inisialisasi dropdown tahun (hanya sekali) ── */
+let _histFilterInit = false;
+function initAbsenHistFilter() {
+  if (_histFilterInit) return;
+  _histFilterInit = true;
   const selT = document.getElementById('absen-hist-tahun');
-  if(!selB || !selT) return;
-  // Set nilai default ke bulan & tahun saat ini
-  selB.value = now.getMonth() + 1;
-  // Isi opsi tahun: 2 tahun ke belakang s/d tahun depan
+  if (!selT) return;
+  const now = new Date();
   selT.innerHTML = '';
-  for(let y = now.getFullYear() - 2; y <= now.getFullYear() + 1; y++){
+  for (let y = now.getFullYear() - 2; y <= now.getFullYear() + 1; y++) {
     const o = document.createElement('option');
     o.value = y; o.textContent = y;
-    if(y === now.getFullYear()) o.selected = true;
     selT.appendChild(o);
   }
 }
 
-function absenHistFilter(){
-  if(!_absenHistNip) return;
-  const b = parseInt(document.getElementById('absen-hist-bulan')?.value) || (new Date().getMonth()+1);
-  const y = parseInt(document.getElementById('absen-hist-tahun')?.value) || new Date().getFullYear();
-  loadAbsenHistory(_absenHistNip, y, b);
+/* ── Simpan nilai dropdown ke state JS (dipanggil oleh onchange) ── */
+function absenHistSaveFilter() {
+  const b = parseInt(document.getElementById('absen-hist-bulan')?.value);
+  const y = parseInt(document.getElementById('absen-hist-tahun')?.value);
+  if (b) _absenHistM = b;
+  if (y) _absenHistY = y;
 }
 
-function absenHistFilterBulanIni(){
-  const now = new Date();
+/* ── Sync dropdown ke state JS ── */
+function absenHistSyncDOM() {
   const selB = document.getElementById('absen-hist-bulan');
   const selT = document.getElementById('absen-hist-tahun');
-  if(selB) selB.value = now.getMonth() + 1;
-  if(selT) selT.value = now.getFullYear();
-  if(_absenHistNip) loadAbsenHistory(_absenHistNip, now.getFullYear(), now.getMonth()+1);
+  if (selB) selB.value = _absenHistM;
+  if (selT) selT.value = _absenHistY;
 }
 
-async function loadAbsenHistory(nip, tahunParam, bulanParam){
+/* ── Tombol 🔍 Lihat ── */
+function absenHistFilter() {
+  absenHistSaveFilter(); // baca DOM sekali lagi sebelum query
+  if (_absenHistNip) loadAbsenHistory(_absenHistNip);
+}
+
+/* ── Tombol Bulan Ini ── */
+function absenHistFilterBulanIni() {
+  const now = new Date();
+  _absenHistY = now.getFullYear();
+  _absenHistM = now.getMonth() + 1;
+  absenHistSyncDOM();
+  if (_absenHistNip) loadAbsenHistory(_absenHistNip);
+}
+
+/* ── Mode pilih massal ── */
+function absenBulkMode(aktif) {
+  _absenBulkMode = aktif;
+  _absenChecked.clear();
+  document.getElementById('absen-bulk-bar').style.display     = aktif ? 'flex'  : 'none';
+  document.getElementById('absen-bulk-trigger').style.display = aktif ? 'none'  : 'block';
+  if (_absenHistNip) loadAbsenHistory(_absenHistNip); // re-render dengan/tanpa checkbox
+}
+
+/* ── Toggle semua checkbox ── */
+function absenToggleAllCheck(checked) {
+  _absenChecked.clear();
+  document.querySelectorAll('.absen-row-check').forEach(cb => {
+    cb.checked = checked;
+    if (checked) _absenChecked.add(cb.dataset.tgl);
+  });
+  absenUpdateBulkBar();
+}
+
+/* ── Update counter & tombol hapus ── */
+function absenUpdateBulkBar() {
+  const n = _absenChecked.size;
+  const countEl = document.getElementById('absen-bulk-count');
+  const btnEl   = document.getElementById('btn-hapus-massal');
+  if (countEl) countEl.textContent = n + ' data dipilih';
+  if (btnEl)   btnEl.disabled = n === 0;
+  // Sync "pilih semua" checkbox
+  const allCbs = document.querySelectorAll('.absen-row-check');
+  const chkAll = document.getElementById('absen-check-all');
+  if (chkAll && allCbs.length) {
+    chkAll.checked = allCbs.length > 0 && _absenChecked.size === allCbs.length;
+    chkAll.indeterminate = _absenChecked.size > 0 && _absenChecked.size < allCbs.length;
+  }
+}
+
+/* ── Hapus massal ── */
+async function hapusAbsensiMassal() {
+  const nip   = _absenHistNip;
+  const tgls  = [..._absenChecked];
+  if (!nip || !tgls.length) return;
+
+  const { isConfirmed } = await Swal.fire({
+    title: 'Hapus ' + tgls.length + ' Data?',
+    html: 'Keterangan absensi untuk <strong>' + tgls.length + ' tanggal</strong> akan dihapus permanen.',
+    icon: 'warning', showCancelButton: true,
+    confirmButtonText: '🗑️ Ya, Hapus Semua',
+    cancelButtonText: 'Batal',
+    confirmButtonColor: '#ef4444',
+  });
+  if (!isConfirmed) return;
+
+  showLoad(true);
+  let gagal = 0;
+  for (const tgl of tgls) {
+    const { ok } = await db.from('absensi_keterangan').eq('nip', nip).eq('tanggal', tgl).del();
+    if (!ok) gagal++;
+    else {
+      S.absensiAll = S.absensiAll.filter(r => !(r.nip === nip && r.tanggal === tgl));
+    }
+  }
+  showLoad(false);
+
+  alog('ok', '🗑️ Hapus massal: ' + (tgls.length - gagal) + ' berhasil, ' + gagal + ' gagal.');
+  if (gagal > 0) swal('Sebagian Gagal', gagal + ' data gagal dihapus.', 'warning');
+  _absenChecked.clear();
+  // Reload TETAP di bulan yang sama
+  loadAbsenHistory(nip);
+}
+
+/* ── FUNGSI UTAMA: load riwayat absensi ── */
+async function loadAbsenHistory(nip) {
   _absenHistNip = nip;
-  // Inisialisasi filter jika belum
-  initAbsenHistFilter();
+  initAbsenHistFilter();   // pastikan dropdown tahun terisi (hanya sekali)
+  absenHistSyncDOM();      // tampilkan state JS ke dropdown (bukan sebaliknya)
 
-  const now = new Date();
-  const y = tahunParam || parseInt(document.getElementById('absen-hist-tahun')?.value) || now.getFullYear();
-  const m = bulanParam || parseInt(document.getElementById('absen-hist-bulan')?.value) || (now.getMonth()+1);
+  const y = _absenHistY;
+  const m = _absenHistM;
 
-  // Sync tampilan select ke nilai yang digunakan
-  const selB = document.getElementById('absen-hist-bulan');
-  const selT = document.getElementById('absen-hist-tahun');
-  if(selB) selB.value = m;
-  if(selT) selT.value = y;
-
-  const dari   = y+'-'+String(m).padStart(2,'0')+'-01';
-  const sampai = y+'-'+String(m).padStart(2,'0')+'-'+new Date(y,m,0).getDate();
+  const dari   = y + '-' + String(m).padStart(2, '0') + '-01';
+  const sampai = y + '-' + String(m).padStart(2, '0') + '-' + new Date(y, m, 0).getDate();
 
   const wrap = document.getElementById('absen-history-wrap');
   const list = document.getElementById('absen-history-list');
   wrap.style.display = 'block';
-  list.innerHTML = '<div style="color:var(--text-dim);font-size:0.82rem;padding:12px 0;">⏳ Memuat riwayat...</div>';
+  list.innerHTML = '<div style="color:var(--text-dim);font-size:0.82rem;padding:12px 0;">⏳ Memuat riwayat ' + BULAN[m-1] + ' ' + y + '...</div>';
 
-  const {data,ok} = await db.from('absensi_keterangan').sel('tanggal,kode,keterangan').eq('nip',nip).gte('tanggal',dari).lte('tanggal',sampai).ord('tanggal',false).get();
-  if(!ok){
+  const { data, ok } = await db.from('absensi_keterangan')
+    .sel('tanggal,kode,keterangan').eq('nip', nip)
+    .gte('tanggal', dari).lte('tanggal', sampai).ord('tanggal', false).get();
+
+  if (!ok) {
     list.innerHTML = '<div style="color:#e53e3e;font-size:0.82rem;padding:12px 0;">❌ Gagal memuat riwayat.</div>';
     return;
   }
-  if(!data||!data.length){
-    list.innerHTML = '<div style="text-align:center;color:var(--text-dim);padding:24px 0;font-size:0.85rem;">📭 Tidak ada keterangan absensi untuk '+BULAN[m-1]+' '+y+'.</div>';
+  if (!data || !data.length) {
+    list.innerHTML = '<div style="text-align:center;color:var(--text-dim);padding:24px 0;font-size:0.85rem;">📭 Tidak ada keterangan absensi untuk ' + BULAN[m-1] + ' ' + y + '.</div>';
     return;
   }
-  list.innerHTML = data.map(r=>{
-    const info = KODE_MAP[r.kode]||{cssClass:'chip-wfo',label:r.kode};
-    const d = new Date(r.tanggal+'T00:00:00');
+
+  list.innerHTML = data.map(r => {
+    const info = KODE_MAP[r.kode] || { cssClass: 'chip-wfo', label: r.kode };
+    const d    = new Date(r.tanggal + 'T00:00:00');
+    const isChecked = _absenChecked.has(r.tanggal);
+    const checkboxHtml = _absenBulkMode
+      ? `<input type="checkbox" class="absen-row-check" data-tgl="${r.tanggal}"
+           ${isChecked ? 'checked' : ''}
+           onchange="absenRowCheck(this)"
+           style="width:15px;height:15px;accent-color:#ef4444;cursor:pointer;flex-shrink:0;">`
+      : '';
     return `<div style="display:flex;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid #f0f3ff;flex-wrap:wrap;">
+      ${checkboxHtml}
       <span style="font-size:0.8rem;font-weight:600;color:var(--navy);min-width:120px;">${HARI[d.getDay()]}, ${fmtTgl(r.tanggal)}</span>
       <span class="jadwal-name-chip ${info.cssClass}" style="border-radius:8px;padding:3px 10px;">${r.kode}</span>
-      <span style="font-size:0.78rem;color:var(--text-dim);flex:1;">${r.keterangan||'—'}</span>
+      <span style="font-size:0.78rem;color:var(--text-dim);flex:1;">${r.keterangan || '—'}</span>
       <div style="display:flex;gap:6px;margin-left:auto;">
-        <button onclick="bukaEditAbsensi('${nip}','${r.tanggal}','${r.kode}',\`${(r.keterangan||'').replace(/`/g,'\\`')}\`)" style="background:rgba(10,22,40,0.07);border:1px solid #c8d4ea;border-radius:6px;padding:3px 10px;font-size:0.72rem;color:var(--navy);cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;font-weight:600;">✏️ Ubah</button>
-        <button onclick="hapusAbsensi('${nip}','${r.tanggal}')" style="background:none;border:1px solid #fca5a5;border-radius:6px;padding:3px 10px;font-size:0.72rem;color:#dc2626;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;font-weight:600;">🗑️ Hapus</button>
+        <button onclick="bukaEditAbsensi('${nip}','${r.tanggal}','${r.kode}',\`${(r.keterangan||'').replace(/`/g,'\\`')}\`)"
+          style="background:rgba(10,22,40,0.07);border:1px solid #c8d4ea;border-radius:6px;padding:3px 10px;font-size:0.72rem;color:var(--navy);cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;font-weight:600;">✏️ Ubah</button>
+        <button onclick="hapusAbsensi('${nip}','${r.tanggal}')"
+          style="background:none;border:1px solid #fca5a5;border-radius:6px;padding:3px 10px;font-size:0.72rem;color:#dc2626;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;font-weight:600;">🗑️ Hapus</button>
       </div>
     </div>`;
   }).join('');
+
+  // Update bulk bar counter setelah render
+  if (_absenBulkMode) absenUpdateBulkBar();
 }
+
+/* ── Checkbox per baris ── */
+function absenRowCheck(cb) {
+  if (cb.checked) _absenChecked.add(cb.dataset.tgl);
+  else _absenChecked.delete(cb.dataset.tgl);
+  absenUpdateBulkBar();
+}
+
 
 /* ══ MODAL EDIT ABSENSI ══ */
 function bukaEditAbsensi(nip, tanggal, kodeSekarang, keteranganSekarang){
@@ -3603,7 +3736,13 @@ async function simpanEditAbsensi(){
 let EDIT_AB = {};
 
 async function hapusAbsensi(nip,tanggal){
-  const {isConfirmed}=await Swal.fire({title:'Hapus keterangan?',text:tanggal,icon:'warning',showCancelButton:true,confirmButtonText:'Ya, Hapus',confirmButtonColor:'#ef4444'});
+  const d=new Date(tanggal+'T00:00:00');
+  const {isConfirmed}=await Swal.fire({
+    title:'Hapus keterangan?',
+    html:'<strong>'+HARI[d.getDay()]+', '+fmtTgl(tanggal)+'</strong>',
+    icon:'warning',showCancelButton:true,
+    confirmButtonText:'Ya, Hapus',confirmButtonColor:'#ef4444'
+  });
   if(!isConfirmed) return;
   showLoad(true);
   const {ok,err}=await db.from('absensi_keterangan').eq('nip',nip).eq('tanggal',tanggal).del();
@@ -3611,6 +3750,7 @@ async function hapusAbsensi(nip,tanggal){
   if(!ok) return swal('Gagal','Error: '+err,'error');
   S.absensiAll=S.absensiAll.filter(r=>!(r.nip===nip&&r.tanggal===tanggal));
   alog('ok','Absensi '+nip+' ('+tanggal+') dihapus.');
+  // Reload tetap di bulan yang sama (_absenHistY/_absenHistM tidak berubah)
   loadAbsenHistory(nip);
 }
 
@@ -3619,6 +3759,13 @@ function resetAbsensi(){
   AB_pegawaiList=[];
   AB_tglMode='single';
   _absenHistNip='';
+  // Reset state bulan ke bulan saat ini untuk sesi berikutnya
+  const now=new Date();
+  _absenHistY=now.getFullYear();
+  _absenHistM=now.getMonth()+1;
+  // Reset mode hapus massal
+  _absenBulkMode=false;
+  _absenChecked.clear();
   document.getElementById('absen-peg-inp').value='';
   document.getElementById('absen-peg-drop').classList.remove('show');
   renderAbsenPegTags();
