@@ -784,11 +784,23 @@ Pegawai yang ditugaskan WFO pada hari Jumat dapat melaksanakan WFH pada hari Rab
         <button onclick="resetAbsensi()" style="background:none;border:1.5px solid #e2e7f3;border-radius:10px;padding:10px 18px;font-size:0.82rem;font-weight:600;color:var(--text-dim);cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;">↺ Reset</button>
       </div>
       <!-- Riwayat absensi pegawai terpilih -->
-      <!-- Riwayat absensi pegawai terpilih -->
       <div id="absen-history-wrap" style="display:none;margin-top:18px;">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-          <div style="font-size:0.75rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-dim);">Riwayat Absensi Bulan Ini</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:10px;">
+          <div style="font-size:0.75rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-dim);">📋 Riwayat Absensi</div>
           <div style="font-size:0.72rem;color:var(--text-dim);">✏️ Klik <strong>Ubah</strong> untuk koreksi, 🗑️ untuk hapus</div>
+        </div>
+        <!-- Filter bulan & tahun -->
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px;padding:12px 14px;background:#f5f7fc;border-radius:12px;border:1px solid #e2e7f3;">
+          <span style="font-size:0.72rem;font-weight:700;color:var(--navy-light);letter-spacing:0.05em;text-transform:uppercase;">Tampilkan:</span>
+          <select id="absen-hist-bulan" class="admin-sel" style="max-width:140px;padding:8px 12px;font-size:0.82rem;">
+            <option value="1">Januari</option><option value="2">Februari</option><option value="3">Maret</option>
+            <option value="4">April</option><option value="5">Mei</option><option value="6">Juni</option>
+            <option value="7">Juli</option><option value="8">Agustus</option><option value="9">September</option>
+            <option value="10">Oktober</option><option value="11">November</option><option value="12">Desember</option>
+          </select>
+          <select id="absen-hist-tahun" class="admin-sel" style="max-width:100px;padding:8px 12px;font-size:0.82rem;"></select>
+          <button onclick="absenHistFilter()" class="btn-save" style="padding:8px 18px;font-size:0.82rem;">🔍 Lihat</button>
+          <button onclick="absenHistFilterBulanIni()" style="background:none;border:1.5px solid #c8d4ea;border-radius:10px;padding:8px 14px;font-size:0.78rem;font-weight:600;color:var(--text-dim);cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;">Bulan Ini</button>
         </div>
         <div id="absen-history-list"></div>
       </div>
@@ -3397,19 +3409,81 @@ async function simpanAbsensi(){
   resetAbsensi();
 }
 
-async function loadAbsenHistory(nip){
-  const now=new Date();
-  const y=now.getFullYear(), m=now.getMonth();
-  const dari=y+'-'+String(m+1).padStart(2,'0')+'-01';
-  const sampai=y+'-'+String(m+1).padStart(2,'0')+'-'+new Date(y,m+1,0).getDate();
-  const {data,ok}=await db.from('absensi_keterangan').sel('tanggal,kode,keterangan').eq('nip',nip).gte('tanggal',dari).lte('tanggal',sampai).ord('tanggal',false).get();
-  const wrap=document.getElementById('absen-history-wrap');
-  const list=document.getElementById('absen-history-list');
-  if(!ok||!data||!data.length){ wrap.style.display='none'; return; }
-  wrap.style.display='block';
-  list.innerHTML=data.map(r=>{
-    const info=KODE_MAP[r.kode]||{cssClass:'chip-wfo',label:r.kode};
-    const d=new Date(r.tanggal+'T00:00:00');
+/* ══════════════════════════════════════════════
+   RIWAYAT ABSENSI — dengan filter bulan & tahun
+   ══════════════════════════════════════════════ */
+
+// NIP pegawai yang sedang dilihat riwayatnya (agar bisa re-load saat filter berubah)
+let _absenHistNip = '';
+
+function initAbsenHistFilter(){
+  const now = new Date();
+  const selB = document.getElementById('absen-hist-bulan');
+  const selT = document.getElementById('absen-hist-tahun');
+  if(!selB || !selT) return;
+  // Set nilai default ke bulan & tahun saat ini
+  selB.value = now.getMonth() + 1;
+  // Isi opsi tahun: 2 tahun ke belakang s/d tahun depan
+  selT.innerHTML = '';
+  for(let y = now.getFullYear() - 2; y <= now.getFullYear() + 1; y++){
+    const o = document.createElement('option');
+    o.value = y; o.textContent = y;
+    if(y === now.getFullYear()) o.selected = true;
+    selT.appendChild(o);
+  }
+}
+
+function absenHistFilter(){
+  if(!_absenHistNip) return;
+  const b = parseInt(document.getElementById('absen-hist-bulan')?.value) || (new Date().getMonth()+1);
+  const y = parseInt(document.getElementById('absen-hist-tahun')?.value) || new Date().getFullYear();
+  loadAbsenHistory(_absenHistNip, y, b);
+}
+
+function absenHistFilterBulanIni(){
+  const now = new Date();
+  const selB = document.getElementById('absen-hist-bulan');
+  const selT = document.getElementById('absen-hist-tahun');
+  if(selB) selB.value = now.getMonth() + 1;
+  if(selT) selT.value = now.getFullYear();
+  if(_absenHistNip) loadAbsenHistory(_absenHistNip, now.getFullYear(), now.getMonth()+1);
+}
+
+async function loadAbsenHistory(nip, tahunParam, bulanParam){
+  _absenHistNip = nip;
+  // Inisialisasi filter jika belum
+  initAbsenHistFilter();
+
+  const now = new Date();
+  const y = tahunParam || parseInt(document.getElementById('absen-hist-tahun')?.value) || now.getFullYear();
+  const m = bulanParam || parseInt(document.getElementById('absen-hist-bulan')?.value) || (now.getMonth()+1);
+
+  // Sync tampilan select ke nilai yang digunakan
+  const selB = document.getElementById('absen-hist-bulan');
+  const selT = document.getElementById('absen-hist-tahun');
+  if(selB) selB.value = m;
+  if(selT) selT.value = y;
+
+  const dari   = y+'-'+String(m).padStart(2,'0')+'-01';
+  const sampai = y+'-'+String(m).padStart(2,'0')+'-'+new Date(y,m,0).getDate();
+
+  const wrap = document.getElementById('absen-history-wrap');
+  const list = document.getElementById('absen-history-list');
+  wrap.style.display = 'block';
+  list.innerHTML = '<div style="color:var(--text-dim);font-size:0.82rem;padding:12px 0;">⏳ Memuat riwayat...</div>';
+
+  const {data,ok} = await db.from('absensi_keterangan').sel('tanggal,kode,keterangan').eq('nip',nip).gte('tanggal',dari).lte('tanggal',sampai).ord('tanggal',false).get();
+  if(!ok){
+    list.innerHTML = '<div style="color:#e53e3e;font-size:0.82rem;padding:12px 0;">❌ Gagal memuat riwayat.</div>';
+    return;
+  }
+  if(!data||!data.length){
+    list.innerHTML = '<div style="text-align:center;color:var(--text-dim);padding:24px 0;font-size:0.85rem;">📭 Tidak ada keterangan absensi untuk '+BULAN[m-1]+' '+y+'.</div>';
+    return;
+  }
+  list.innerHTML = data.map(r=>{
+    const info = KODE_MAP[r.kode]||{cssClass:'chip-wfo',label:r.kode};
+    const d = new Date(r.tanggal+'T00:00:00');
     return `<div style="display:flex;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid #f0f3ff;flex-wrap:wrap;">
       <span style="font-size:0.8rem;font-weight:600;color:var(--navy);min-width:120px;">${HARI[d.getDay()]}, ${fmtTgl(r.tanggal)}</span>
       <span class="jadwal-name-chip ${info.cssClass}" style="border-radius:8px;padding:3px 10px;">${r.kode}</span>
@@ -3544,6 +3618,7 @@ function resetAbsensi(){
   AB={pegawai:null,tgl:'',kode:'',keterangan:''};
   AB_pegawaiList=[];
   AB_tglMode='single';
+  _absenHistNip='';
   document.getElementById('absen-peg-inp').value='';
   document.getElementById('absen-peg-drop').classList.remove('show');
   renderAbsenPegTags();
