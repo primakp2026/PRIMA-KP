@@ -1130,7 +1130,7 @@ Pegawai yang ditugaskan WFO pada hari Jumat dapat melaksanakan WFH pada hari Rab
     <!-- ══ SEKSI: UBAH PIN ADMIN ══ -->
     <div class="admin-section">
       <h4>🔐 Ubah PIN Admin</h4>
-      <div style="font-size:0.8rem;color:var(--text-dim);margin-bottom:16px;">Ubah PIN untuk mengakses panel admin. PIN baru berlaku langsung setelah disimpan di kode sumber. <strong>Catatan:</strong> PIN disimpan di kode HTML — hubungi pengembang untuk update permanen.</div>
+      <div style="font-size:0.8rem;color:var(--text-dim);margin-bottom:16px;">Ubah PIN untuk mengakses panel admin. PIN baru akan disimpan secara permanen dan terenkripsi (SHA-256) di database Supabase. Berlaku di semua browser/perangkat setelah disimpan.</div>
       <div class="config-grid" style="max-width:400px;margin-bottom:12px;">
         <div class="config-field">
           <label>PIN Admin Baru</label>
@@ -1142,11 +1142,11 @@ Pegawai yang ditugaskan WFO pada hari Jumat dapat melaksanakan WFH pada hari Rab
         </div>
       </div>
       <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
-        <button class="btn-save" onclick="ubahPinAdmin()">🔐 Simpan PIN Baru (Sesi Ini)</button>
+        <button class="btn-save" id="btn-ubah-pin-admin" onclick="ubahPinAdmin()">🔐 Simpan PIN Baru</button>
         <div id="admin-pin-status" class="config-status"></div>
       </div>
-      <div style="margin-top:10px;padding:10px 14px;background:#fff8e1;border-radius:10px;border:1px solid #fcd34d;font-size:0.75rem;color:#7a5f00;">
-        ⚠️ PIN baru hanya berlaku untuk <strong>sesi browser ini</strong>. Untuk perubahan permanen, update konstanta <code>ADMIN_PIN</code> di kode sumber HTML.
+      <div style="margin-top:10px;padding:10px 14px;background:#f0fdf4;border-radius:10px;border:1px solid #86efac;font-size:0.75rem;color:#166534;">
+        🛡️ PIN disimpan sebagai <strong>hash SHA-256</strong> di kolom <code>admin_pin_hash</code> pada tabel <code>portal_config</code> Supabase. Tidak ada yang bisa membaca PIN asli Anda — termasuk admin database.
       </div>
     </div>
 
@@ -1224,7 +1224,7 @@ Pegawai yang ditugaskan WFO pada hari Jumat dapat melaksanakan WFH pada hari Rab
    ══════════════════════════════════════════════ */
 const SUPA_URL  = 'https://jwkfzwhazwqctqaagfht.supabase.co';           // ← ganti
 const SUPA_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp3a2Z6d2hhendxY3RxYWFnZmh0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczNTU1NjEsImV4cCI6MjA5MjkzMTU2MX0.rBDdZ9Xk1-223_pykF8c5G8CmGDOVB8n_NULWgnnOC0'; // ← ganti
-const ADMIN_PIN = '123456';                              // ← PIN admin (ubah sesuai kebutuhan)
+const ADMIN_PIN = 'prima25';                              // ← PIN admin (ubah sesuai kebutuhan)
 
 /* Jadwal buka/tutup portal — 3 fase:
    FASE 1 — ISIAN   : TGL_BUKA  s/d TGL_TUTUP  → bisa daftar/batalkan WFH
@@ -1352,6 +1352,11 @@ async function loadDynConfig() {
     const {data,ok} = await db.from('portal_config').sel('*').lim(1).get();
     if(ok && data && data.length) {
       S.dynCfg = data[0];
+      // Jika ada PIN tersimpan di DB, gunakan sebagai acuan verifikasi (dibandingkan hash)
+      if(S.dynCfg.admin_pin_hash) {
+        _adminPinDynamic = null; // null = pakai hash mode
+        _adminPinHash = S.dynCfg.admin_pin_hash;
+      }
     }
   } catch(e) { /* fallback ke konstanta HTML */ }
 }
@@ -2778,10 +2783,23 @@ function resetTukar(){
   document.getElementById('tukar-hasil').className='tukar-hasil';
 }
 
-let _adminPinDynamic = ADMIN_PIN; // bisa diubah sementara via UI
+let _adminPinDynamic = ADMIN_PIN; // cache PIN plaintext (sesi); null jika sudah pakai hash DB
+let _adminPinHash = null;          // hash SHA-256 dari PIN di database
 
-function verifyPin(){
-  if(document.getElementById('pin-inp').value.trim()===_adminPinDynamic){
+async function verifyPin(){
+  const entered = document.getElementById('pin-inp').value.trim();
+  let valid = false;
+
+  if(_adminPinHash) {
+    // Mode hash: bandingkan SHA-256 dari input dengan hash di DB
+    const enteredHash = await sha256(entered);
+    valid = (enteredHash === _adminPinHash);
+  } else {
+    // Mode plaintext fallback (PIN dari konstanta HTML atau sesi)
+    valid = (entered === (_adminPinDynamic || ADMIN_PIN));
+  }
+
+  if(valid){
     S.pinOK=true; document.getElementById('pin-overlay').style.display='none';
     alog('ok','Akses admin diberikan.');
     loadAdminConfig();
@@ -2796,19 +2814,39 @@ function verifyPin(){
   }
 }
 
-function ubahPinAdmin(){
+async function ubahPinAdmin(){
   const newPin = document.getElementById('admin-pin-new').value.trim();
   const konfirm = document.getElementById('admin-pin-konfirm').value.trim();
   const st = document.getElementById('admin-pin-status');
+  const btn = document.getElementById('btn-ubah-pin-admin');
   if(!newPin||newPin.length<4){ st.style.color='#e53e3e'; st.textContent='⚠️ PIN minimal 4 karakter.'; return; }
   if(newPin!==konfirm){ st.style.color='#e53e3e'; st.textContent='⚠️ Konfirmasi PIN tidak cocok.'; return; }
-  _adminPinDynamic = newPin;
-  document.getElementById('admin-pin-new').value='';
-  document.getElementById('admin-pin-konfirm').value='';
-  st.style.color='#00875a';
-  st.textContent='✅ PIN berhasil diubah untuk sesi ini!';
-  alog('ok','PIN admin diubah untuk sesi ini.');
-  setTimeout(()=>{ st.textContent=''; st.style.color=''; },4000);
+
+  btn.disabled=true; st.style.color='var(--text-dim)'; st.textContent='🔐 Menyimpan...';
+
+  const hashed = await sha256(newPin);
+  const payload = { id:1, admin_pin_hash: hashed };
+  // Pertahankan field lain
+  ['tgl_buka','jam_buka','tgl_tutup','jam_tutup','tgl_countdown','jam_countdown','force_view_only','allow_libur_wfh','kuota_pct'].forEach(k=>{
+    if(S.dynCfg && S.dynCfg[k] !== undefined) payload[k]=S.dynCfg[k];
+  });
+
+  const {ok,err} = await db.from('portal_config').upsert(payload,'id');
+  btn.disabled=false;
+  if(ok){
+    _adminPinDynamic = newPin; // update cache sesi
+    await loadDynConfig();    // reload agar S.dynCfg terupdate
+    document.getElementById('admin-pin-new').value='';
+    document.getElementById('admin-pin-konfirm').value='';
+    st.style.color='#00875a';
+    st.textContent='✅ PIN berhasil diubah dan tersimpan permanen di database!';
+    alog('ok','PIN admin diubah permanen (tersimpan terenkripsi di Supabase).');
+    setTimeout(()=>{ st.textContent=''; st.style.color=''; },5000);
+  } else {
+    st.style.color='#e53e3e';
+    st.textContent='❌ Gagal menyimpan: '+(err||'Error');
+    alog('err','Gagal ubah PIN admin: '+err);
+  }
 }
 
 function adminGen(m){
