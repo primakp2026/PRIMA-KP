@@ -3,7 +3,9 @@
 <head>
   <base target="_top">
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
   <title>PRIMA KP - Portal Informasi dan Monitoring Kehadiran Anak KP</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
@@ -17,8 +19,9 @@
       --surface:#f5f7fc; --white:#ffffff; --text-dim:#6b7a99;
     }
     *{margin:0;padding:0;box-sizing:border-box;}
-    body{background:var(--surface);font-family:'Plus Jakarta Sans',sans-serif;color:var(--navy);overflow-x:hidden;}
-    .page{display:none;min-height:100vh;}
+    html{overflow-x:hidden;max-width:100vw;}
+    body{background:var(--surface);font-family:'Plus Jakarta Sans',sans-serif;color:var(--navy);overflow-x:hidden;max-width:100vw;}
+    .page{display:none;min-height:100vh;overflow-x:hidden;max-width:100vw;}
     .page.active{display:flex;}
     /* LOADING */
     #loading{position:fixed;inset:0;background:rgba(10,22,40,0.85);backdrop-filter:blur(8px);z-index:9999;display:none;flex-direction:column;align-items:center;justify-content:center;gap:16px;}
@@ -59,16 +62,16 @@
     .btn-login:hover{background:var(--navy-light);transform:translateY(-2px);box-shadow:0 12px 28px rgba(10,22,40,0.2);}
     .kmk-note{background:#f8f9fe;border-radius:12px;padding:14px 16px;font-size:0.75rem;color:var(--text-dim);line-height:1.6;border-left:3px solid var(--gold);}
     /* TOP BAR */
-    .top-bar{height:64px;background:#000000;display:flex;align-items:center;justify-content:space-between;padding:0 28px;flex-shrink:0;position:sticky;top:0;z-index:100;box-shadow:0 2px 20px rgba(0,0,0,0.3);}
-    .top-bar-left{display:flex;align-items:center;gap:16px;}
-    .top-bar-logo{height:30px;filter:none;}
-    .top-bar-divider{width:1px;height:28px;background:rgba(255,255,255,0.15);}
-    .top-bar-title{color:rgba(255,255,255,0.7);font-size:0.8rem;font-weight:600;letter-spacing:0.05em;}
-    .top-bar-right{display:flex;align-items:center;gap:12px;}
-    .user-chip{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);border-radius:100px;padding:6px 16px 6px 8px;}
-    .user-avatar{width:32px;height:32px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:0.8rem;color:var(--navy);}
-    .user-name-bar{color:white;font-size:0.82rem;font-weight:600;}
-    .user-nip-bar{color:rgba(255,255,255,0.4);font-size:0.7rem;}
+    .top-bar{height:64px;background:#000000;display:flex;align-items:center;justify-content:space-between;padding:0 28px;flex-shrink:0;position:sticky;top:0;z-index:100;box-shadow:0 2px 20px rgba(0,0,0,0.3);overflow:hidden;}
+    .top-bar-left{display:flex;align-items:center;gap:16px;min-width:0;flex-shrink:1;overflow:hidden;}
+    .top-bar-logo{height:30px;filter:none;flex-shrink:0;}
+    .top-bar-divider{width:1px;height:28px;background:rgba(255,255,255,0.15);flex-shrink:0;}
+    .top-bar-title{color:rgba(255,255,255,0.7);font-size:0.8rem;font-weight:600;letter-spacing:0.05em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .top-bar-right{display:flex;align-items:center;gap:12px;flex-shrink:0;}
+    .user-chip{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);border-radius:100px;padding:6px 16px 6px 8px;max-width:220px;}
+    .user-avatar{width:32px;height:32px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:0.8rem;color:var(--navy);flex-shrink:0;}
+    .user-name-bar{color:white;font-size:0.82rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px;}
+    .user-nip-bar{color:rgba(255,255,255,0.4);font-size:0.7rem;white-space:nowrap;}
     .btn-tb{border-radius:10px;padding:8px 16px;font-size:0.78rem;font-weight:700;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;transition:all 0.2s;border:1px solid;}
     .btn-logout{background:rgba(255,107,107,0.15);border-color:rgba(255,107,107,0.3);color:#ff8f8f;}
     .btn-logout:hover{background:rgba(255,107,107,0.25);}
@@ -130,49 +133,201 @@
     .pin-input{width:100%;border:2px solid #e8ecf5;border-radius:12px;padding:14px;font-size:1.4rem;letter-spacing:0.3em;text-align:center;font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;color:var(--navy);outline:none;margin-bottom:16px;transition:border-color 0.2s;}
     .pin-input:focus{border-color:var(--gold);}
     .badge-admin{display:inline-flex;align-items:center;gap:6px;background:rgba(201,162,39,0.12);border:1px solid rgba(201,162,39,0.3);color:var(--gold);font-size:0.7rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:6px 12px;border-radius:100px;margin-bottom:20px;}
-    @media(max-width:768px){.login-panel-left{display:none;}.cal-body,.admin-body{padding:16px;}.stats-strip{grid-template-columns:1fr;gap:10px;}.timer-num{font-size:2rem;padding:12px 16px;min-width:70px;}}
+    @media(max-width:768px){
+      .login-panel-left{display:none;}
+      .cal-body,.admin-body{padding:16px;}
+      .timer-num{font-size:2rem;padding:12px 16px;min-width:70px;}
+    }
 
-    /* ── MOBILE PORTRAIT OPTIMIZATIONS ── */
-    @media(max-width:480px){
-      .top-bar{padding:0 14px;height:56px;}
-      .top-bar-title{display:none;}
-      .top-bar-logo{height:24px;}
-      .user-name-bar{font-size:0.75rem;}
-      .user-nip-bar{display:none;}
-      .btn-tb{padding:6px 10px;font-size:0.72rem;}
-      .cal-body{padding:10px 12px;}
-      .admin-body{padding:10px 12px;}
-      .stats-strip{gap:8px;}
-      .stat-card{padding:14px 16px;}
-      .stat-value{font-size:1.5rem;}
-      .cal-card{padding:14px 12px;}
-      .admin-section{padding:18px 14px;}
-      .tab-bar{width:100%;overflow-x:auto;flex-wrap:nowrap;}
-      .tab-btn{padding:8px 14px;font-size:0.75rem;white-space:nowrap;}
-      .legend{gap:12px;padding:12px 14px;}
-      .timer-row{gap:10px;}
-      .timer-num{font-size:1.6rem;padding:10px 12px;min-width:58px;}
-      .timer-lbl{font-size:0.6rem;}
-      .countdown-title{font-size:1.5rem;}
-      .countdown-card{padding:32px 20px;}
-      .config-grid{grid-template-columns:1fr;}
-      .admin-btn-grid{grid-template-columns:1fr 1fr;}
-      .admin-row{flex-direction:column;}
-      .admin-row .btn-primary{width:100%;}
-      .jadwal-week-table-wrap{font-size:0.72rem;}
-      .th-nama{min-width:90px;max-width:110px;}
-      .td-nama{min-width:90px;max-width:110px;font-size:0.75rem;}
-      .jadwal-week-code-badge{padding:2px 4px;font-size:0.62rem;}
-      /* Tukar jadwal 2 col → 1 col on mobile */
-      #page-admin .admin-section > div[style*="grid-template-columns:1fr 1fr"]{display:flex!important;flex-direction:column!important;}
-      .peg-table{font-size:0.75rem;}
-      .peg-table th,.peg-table td{padding:8px 8px;}
-      .ubah-tgl-grid{display:flex;flex-wrap:wrap;gap:6px;}
-      .ubah-tgl-btn{min-width:44px;padding:6px 4px;}
+    /* ══════════════════════════════════════
+       MOBILE PORTRAIT — FULL OPTIMIZATION
+       ══════════════════════════════════════ */
+    @media(max-width:520px){
+
+      /* ── Global: cegah horizontal scroll ── */
+      html, body { overflow-x:hidden; width:100%; }
+      .page { overflow-x:hidden; }
+
+      /* ── Top Bar: compact, semua elemen muat ── */
+      .top-bar {
+        height:auto; min-height:52px;
+        padding:8px 10px;
+        flex-wrap:nowrap;
+        gap:6px;
+      }
+      .top-bar-left { gap:8px; min-width:0; flex-shrink:1; overflow:hidden; }
+      .top-bar-logo { height:22px; flex-shrink:0; }
+      .top-bar-divider { display:none; }
+      .top-bar-title { display:none; }
+      .top-bar-right { gap:6px; flex-shrink:0; }
+
+      /* User chip: hanya avatar + nama singkat */
+      .user-chip {
+        padding:5px 8px 5px 5px;
+        gap:6px;
+        max-width:120px;
+      }
+      .user-avatar { width:26px; height:26px; font-size:0.7rem; flex-shrink:0; }
+      .user-name-bar {
+        font-size:0.68rem;
+        font-weight:600;
+        white-space:nowrap;
+        overflow:hidden;
+        text-overflow:ellipsis;
+        max-width:80px;
+      }
+      .user-nip-bar { display:none; }
+
+      /* Tombol top bar: ikon saja */
+      .btn-tb {
+        padding:6px 8px;
+        font-size:0.68rem;
+        border-radius:8px;
+        white-space:nowrap;
+      }
+      /* Sembunyikan teks tombol, tampilkan hanya ikon via data-attr */
+      .btn-tb .btn-text { display:none; }
+
+      /* ── Cal body ── */
+      .cal-body { padding:10px 10px; }
+      .admin-body { padding:10px 10px; }
+
+      /* ── Stats strip: 3 kartu horizontal dalam 1 baris ── */
+      .stats-strip {
+        display:grid;
+        grid-template-columns:repeat(3,1fr);
+        gap:8px;
+        margin-bottom:14px;
+      }
+      .stat-card {
+        padding:10px 10px;
+        border-radius:14px;
+      }
+      .stat-label {
+        font-size:0.58rem;
+        margin-bottom:4px;
+        letter-spacing:0.04em;
+      }
+      .stat-value { font-size:1.4rem; }
+      .stat-sub { font-size:0.6rem; margin-top:2px; }
+
+      /* ── Banner revisi ── */
+      .revisi-banner {
+        padding:10px 12px;
+        font-size:0.76rem;
+        margin-bottom:12px;
+        border-radius:10px;
+      }
+
+      /* ── Cal card ── */
+      .cal-card { padding:10px 8px; border-radius:14px; margin-bottom:14px; }
+
+      /* ── FullCalendar: perkecil font & padding ── */
+      .fc .fc-col-header-cell-cushion { font-size:0.7rem; padding:4px 2px; }
+      .fc .fc-daygrid-day-number { font-size:0.72rem; padding:2px 4px; }
+      .fc-toolbar-title { font-size:0.9rem !important; }
+      .fc-prev-button, .fc-next-button { padding:5px 10px !important; }
+      .fc .fc-daygrid-day-top { justify-content:center; }
+      .day-kuota-badge { font-size:0.52rem; padding:2px 4px; }
+      .day-kuota-pct { font-size:0.5rem; }
+
+      /* ── Tab bar: scroll horizontal, tidak wrap ── */
+      .tab-bar {
+        width:100%;
+        overflow-x:auto;
+        overflow-y:hidden;
+        -webkit-overflow-scrolling:touch;
+        scrollbar-width:none;
+        flex-wrap:nowrap;
+        border-radius:12px;
+        padding:3px;
+        gap:0;
+      }
+      .tab-bar::-webkit-scrollbar { display:none; }
+      .tab-btn {
+        padding:8px 12px;
+        font-size:0.72rem;
+        white-space:nowrap;
+        flex-shrink:0;
+        border-radius:10px;
+      }
+
+      /* ── Legend ── */
+      .legend { gap:8px; padding:10px 12px; flex-wrap:wrap; }
+      .legend-item { font-size:0.7rem; }
+      .legend-dot { width:10px; height:10px; }
+
+      /* ── Jadwal rekan ── */
+      .rekan-card { padding:12px 14px; border-radius:12px; }
+      .rekan-tgl { font-size:0.82rem; }
+      .rekan-name-chip { font-size:0.68rem; padding:3px 8px; }
+
+      /* ── Jadwal harian ── */
+      .jadwal-libur-banner { font-size:0.78rem; padding:10px 12px; }
+      .jadwal-day-card { padding:12px; border-radius:12px; margin-bottom:10px; }
+      .jadwal-day-title { font-size:0.8rem; }
+      .jadwal-name-chip { font-size:0.68rem; padding:2px 8px; }
+
+      /* ── Jadwal mingguan ── */
+      .jadwal-week-table-wrap {
+        overflow-x:auto;
+        -webkit-overflow-scrolling:touch;
+        border-radius:12px;
+      }
+      .jadwal-week-table { font-size:0.68rem; min-width:380px; }
+      .th-nama, .td-nama { min-width:80px; max-width:100px; font-size:0.68rem; padding:6px 6px; }
+      .jadwal-week-table th, .jadwal-week-table td { padding:5px 4px; }
+      .jadwal-week-code-badge { padding:2px 3px; font-size:0.58rem; border-radius:4px; }
+      .jadwal-legend-wrap { gap:6px; flex-wrap:wrap; }
+      .jadwal-legend-chip { font-size:0.62rem; padding:2px 6px; }
+      .jadwal-nav-row { gap:6px; flex-wrap:wrap; justify-content:center; }
+      .jadwal-nav-btn { font-size:0.72rem; padding:6px 10px; }
+      .jadwal-nav-label { font-size:0.78rem; text-align:center; flex:1 0 100%; order:-1; }
+      .jadwal-nav-today { font-size:0.68rem; padding:5px 10px; }
+
+      /* ── Admin section ── */
+      .admin-section { padding:14px 12px; border-radius:16px; }
+      .admin-section h4 { font-size:0.68rem; margin-bottom:12px; }
+      .config-grid { grid-template-columns:1fr 1fr; gap:10px; }
+      .config-inp { padding:9px 12px; font-size:0.82rem; }
+      .admin-btn-grid { grid-template-columns:1fr 1fr; gap:10px; }
+      .admin-row { flex-direction:column; gap:8px; }
+      .admin-row .btn-primary { width:100%; }
+      .peg-table { font-size:0.72rem; }
+      .peg-table th, .peg-table td { padding:7px 8px; }
+
+      /* ── Ubah jadwal grid tanggal ── */
+      .ubah-tgl-grid { display:flex; flex-wrap:wrap; gap:6px; }
+      .ubah-tgl-btn { min-width:42px; font-size:0.66rem; padding:5px 3px; border-radius:8px; }
+
+      /* ── Toggle switch ── */
+      .toggle-switch-wrap { gap:10px; }
+      .toggle-label { font-size:0.82rem; }
+      .toggle-desc { font-size:0.7rem; }
+
+      /* ── Timer countdown ── */
+      .timer-row { gap:8px; }
+      .timer-num { font-size:1.5rem; padding:10px 10px; min-width:54px; border-radius:12px; }
+      .timer-lbl { font-size:0.58rem; }
+      .countdown-title { font-size:1.4rem; }
+      .countdown-sub { font-size:0.78rem; }
+      .countdown-card { padding:28px 16px; }
+      .countdown-logo { width:72px; }
+
+      /* ── Modal ── */
+      .modal-card { padding:20px 16px; border-radius:18px; margin:8px; max-width:calc(100vw - 16px); }
+      .modal-card h3 { font-size:1.1rem; }
+
+      /* ── Tukar jadwal 2 col → 1 col ── */
+      .tukar-grid-2col { flex-direction:column !important; }
+
+      /* ── Log box ── */
+      .log-box { font-size:0.7rem; }
     }
     /* TAB */
-    .tab-bar{display:flex;gap:0;background:white;border-radius:16px;padding:4px;box-shadow:0 2px 12px rgba(10,22,40,0.06);border:1px solid #edf0f8;margin-bottom:16px;width:fit-content;}
-    .tab-btn{padding:10px 24px;border:none;background:none;border-radius:12px;font-family:'Plus Jakarta Sans',sans-serif;font-size:0.82rem;font-weight:700;color:var(--text-dim);cursor:pointer;transition:all 0.2s;white-space:nowrap;}
+    .tab-bar{display:flex;gap:0;background:white;border-radius:16px;padding:4px;box-shadow:0 2px 12px rgba(10,22,40,0.06);border:1px solid #edf0f8;margin-bottom:16px;width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
+    .tab-bar::-webkit-scrollbar{display:none;}
+    .tab-btn{padding:10px 20px;border:none;background:none;border-radius:12px;font-family:'Plus Jakarta Sans',sans-serif;font-size:0.82rem;font-weight:700;color:var(--text-dim);cursor:pointer;transition:all 0.2s;white-space:nowrap;flex-shrink:0;}
     .tab-btn.active{background:var(--navy);color:white;box-shadow:0 4px 12px rgba(10,22,40,0.2);}
     .tab-pane{display:none;} .tab-pane.active{display:block;}
     /* JADWAL REKAN */
@@ -459,9 +614,9 @@ Pegawai yang ditugaskan WFO pada hari Jumat dapat melaksanakan WFH pada hari Rab
         <div class="user-avatar" id="u-avatar">?</div>
         <div><div class="user-name-bar" id="u-nama">-</div><div class="user-nip-bar" id="u-nip">-</div></div>
       </div>
-      <button class="btn-tb btn-admin-top" onclick="goAdmin()">⚙️ Admin</button>
-      <button class="btn-tb" onclick="openModalGantiPass()" style="background:rgba(0,201,167,0.15);border-color:rgba(0,201,167,0.3);color:#00c9a7;">🔑 Ganti Password</button>
-      <button class="btn-tb btn-logout" onclick="logout()">Keluar</button>
+      <button class="btn-tb btn-admin-top" onclick="goAdmin()">⚙️ <span class="btn-text">Admin</span></button>
+      <button class="btn-tb" onclick="openModalGantiPass()" style="background:rgba(0,201,167,0.15);border-color:rgba(0,201,167,0.3);color:#00c9a7;">🔑 <span class="btn-text">Ganti Password</span></button>
+      <button class="btn-tb btn-logout" onclick="logout()">🚪 <span class="btn-text">Keluar</span></button>
     </div>
   </div>
   <div class="cal-body">
@@ -711,7 +866,7 @@ Pegawai yang ditugaskan WFO pada hari Jumat dapat melaksanakan WFH pada hari Rab
         <div class="user-avatar" id="a-avatar">A</div>
         <div><div class="user-name-bar" id="a-nama">Admin</div><div class="user-nip-bar">Administrator</div></div>
       </div>
-      <button class="btn-tb btn-logout" onclick="S.fromCountdown?showPage('page-countdown'):showPage('page-calendar')">← Portal</button>
+      <button class="btn-tb btn-logout" onclick="S.fromCountdown?showPage('page-countdown'):showPage('page-calendar')">← <span class="btn-text">Portal</span></button>
     </div>
   </div>
   <div class="admin-body">
