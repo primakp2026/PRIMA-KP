@@ -695,7 +695,7 @@ Pegawai yang ditugaskan WFO pada hari Jumat dapat melaksanakan WFH pada hari Rab
       <div class="badge-admin">🔐 Akses Admin</div>
       <h3>Masukkan PIN Admin</h3>
       <p>Halaman ini hanya untuk administrator sistem.</p>
-      <input type="password" id="pin-inp" class="pin-input" maxlength="6" placeholder="••••••" onkeydown="if(event.key==='Enter')verifyPin()">
+      <input type="password" id="pin-inp" class="pin-input" maxlength="32" placeholder="••••••" onkeydown="if(event.key==='Enter')verifyPin()">
       <button class="btn-primary" style="width:100%;margin-bottom:12px;" onclick="verifyPin()">MASUK</button>
       <button onclick="S.fromCountdown?showPage('page-countdown'):showPage('page-calendar')" style="background:none;border:none;color:var(--text-dim);cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;font-size:0.8rem;">← Kembali</button>
     </div>
@@ -1224,7 +1224,7 @@ Pegawai yang ditugaskan WFO pada hari Jumat dapat melaksanakan WFH pada hari Rab
    ══════════════════════════════════════════════ */
 const SUPA_URL  = 'https://jwkfzwhazwqctqaagfht.supabase.co';           // ← ganti
 const SUPA_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp3a2Z6d2hhendxY3RxYWFnZmh0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczNTU1NjEsImV4cCI6MjA5MjkzMTU2MX0.rBDdZ9Xk1-223_pykF8c5G8CmGDOVB8n_NULWgnnOC0'; // ← ganti
-const ADMIN_PIN = '123456';                              // ← PIN admin (ubah sesuai kebutuhan)
+const ADMIN_PIN = 'prima25';                              // ← PIN admin (ubah sesuai kebutuhan)
 
 /* Jadwal buka/tutup portal — 3 fase:
    FASE 1 — ISIAN   : TGL_BUKA  s/d TGL_TUTUP  → bisa daftar/batalkan WFH
@@ -1345,6 +1345,10 @@ let S = {
    ROUTER — cek setiap detik
    ══════════════════════════════════════════════ */
 document.addEventListener('DOMContentLoaded',()=>{ loadDynConfig().then(()=>{ tick(); setInterval(tick,1000); }); });
+
+// ── Variabel PIN admin (harus dideklarasikan SEBELUM loadDynConfig) ───────────
+let _adminPinDynamic = ADMIN_PIN; // cache PIN plaintext; null jika pakai hash DB
+let _adminPinHash = null;          // hash SHA-256 dari PIN di database
 
 // ── Load konfigurasi dinamis dari Supabase ───────────────────────────────────
 async function loadDynConfig() {
@@ -2782,9 +2786,6 @@ function resetTukar(){
   document.getElementById('btn-tukar').disabled=true;
   document.getElementById('tukar-hasil').className='tukar-hasil';
 }
-
-let _adminPinDynamic = ADMIN_PIN; // cache PIN plaintext (sesi); null jika sudah pakai hash DB
-let _adminPinHash = null;          // hash SHA-256 dari PIN di database
 
 async function verifyPin(){
   const entered = document.getElementById('pin-inp').value.trim();
