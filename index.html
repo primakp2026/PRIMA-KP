@@ -131,6 +131,45 @@
     .pin-input:focus{border-color:var(--gold);}
     .badge-admin{display:inline-flex;align-items:center;gap:6px;background:rgba(201,162,39,0.12);border:1px solid rgba(201,162,39,0.3);color:var(--gold);font-size:0.7rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:6px 12px;border-radius:100px;margin-bottom:20px;}
     @media(max-width:768px){.login-panel-left{display:none;}.cal-body,.admin-body{padding:16px;}.stats-strip{grid-template-columns:1fr;gap:10px;}.timer-num{font-size:2rem;padding:12px 16px;min-width:70px;}}
+
+    /* ── MOBILE PORTRAIT OPTIMIZATIONS ── */
+    @media(max-width:480px){
+      .top-bar{padding:0 14px;height:56px;}
+      .top-bar-title{display:none;}
+      .top-bar-logo{height:24px;}
+      .user-name-bar{font-size:0.75rem;}
+      .user-nip-bar{display:none;}
+      .btn-tb{padding:6px 10px;font-size:0.72rem;}
+      .cal-body{padding:10px 12px;}
+      .admin-body{padding:10px 12px;}
+      .stats-strip{gap:8px;}
+      .stat-card{padding:14px 16px;}
+      .stat-value{font-size:1.5rem;}
+      .cal-card{padding:14px 12px;}
+      .admin-section{padding:18px 14px;}
+      .tab-bar{width:100%;overflow-x:auto;flex-wrap:nowrap;}
+      .tab-btn{padding:8px 14px;font-size:0.75rem;white-space:nowrap;}
+      .legend{gap:12px;padding:12px 14px;}
+      .timer-row{gap:10px;}
+      .timer-num{font-size:1.6rem;padding:10px 12px;min-width:58px;}
+      .timer-lbl{font-size:0.6rem;}
+      .countdown-title{font-size:1.5rem;}
+      .countdown-card{padding:32px 20px;}
+      .config-grid{grid-template-columns:1fr;}
+      .admin-btn-grid{grid-template-columns:1fr 1fr;}
+      .admin-row{flex-direction:column;}
+      .admin-row .btn-primary{width:100%;}
+      .jadwal-week-table-wrap{font-size:0.72rem;}
+      .th-nama{min-width:90px;max-width:110px;}
+      .td-nama{min-width:90px;max-width:110px;font-size:0.75rem;}
+      .jadwal-week-code-badge{padding:2px 4px;font-size:0.62rem;}
+      /* Tukar jadwal 2 col → 1 col on mobile */
+      #page-admin .admin-section > div[style*="grid-template-columns:1fr 1fr"]{display:flex!important;flex-direction:column!important;}
+      .peg-table{font-size:0.75rem;}
+      .peg-table th,.peg-table td{padding:8px 8px;}
+      .ubah-tgl-grid{display:flex;flex-wrap:wrap;gap:6px;}
+      .ubah-tgl-btn{min-width:44px;padding:6px 4px;}
+    }
     /* TAB */
     .tab-bar{display:flex;gap:0;background:white;border-radius:16px;padding:4px;box-shadow:0 2px 12px rgba(10,22,40,0.06);border:1px solid #edf0f8;margin-bottom:16px;width:fit-content;}
     .tab-btn{padding:10px 24px;border:none;background:none;border-radius:12px;font-family:'Plus Jakarta Sans',sans-serif;font-size:0.82rem;font-weight:700;color:var(--text-dim);cursor:pointer;transition:all 0.2s;white-space:nowrap;}
@@ -501,6 +540,9 @@ Pegawai yang ditugaskan WFO pada hari Jumat dapat melaksanakan WFH pada hari Rab
         <span class="jadwal-legend-chip chip-cln">CLN</span>
         <span class="jadwal-legend-chip chip-sakit">SAKIT</span>
         <span class="jadwal-legend-chip chip-izin">IZIN</span>
+        <span class="jadwal-legend-chip chip-tgs">DKT</span>
+        <span class="jadwal-legend-chip chip-tgs">PJJ</span>
+        <span class="jadwal-legend-chip chip-tgs">DL</span>
         <span class="jadwal-legend-chip chip-wfo">WFO</span>
       </div>
     </div>
@@ -534,6 +576,9 @@ Pegawai yang ditugaskan WFO pada hari Jumat dapat melaksanakan WFH pada hari Rab
         <span class="jadwal-legend-chip chip-cln">CLN</span>
         <span class="jadwal-legend-chip chip-sakit">SAKIT</span>
         <span class="jadwal-legend-chip chip-izin">IZIN</span>
+        <span class="jadwal-legend-chip chip-tgs">DKT</span>
+        <span class="jadwal-legend-chip chip-tgs">PJJ</span>
+        <span class="jadwal-legend-chip chip-tgs">DL</span>
         <span class="jadwal-legend-chip chip-wfo">WFO</span>
       </div>
     </div>
@@ -729,6 +774,25 @@ Pegawai yang ditugaskan WFO pada hari Jumat dapat melaksanakan WFH pada hari Rab
           <button class="btn-save" onclick="saveConfig()" id="btn-save-config">💾 Simpan Konfigurasi</button>
           <div class="config-status" id="config-status"></div>
         </div>
+        <hr class="config-divider">
+        <div class="config-row-head">🏖️ Ketentuan WFH &amp; Hari Libur</div>
+        <div style="font-size:0.78rem;color:var(--text-dim);margin-bottom:14px;">Secara default, jika ada hari libur nasional dalam satu minggu, pegawai <strong>tidak diizinkan</strong> memilih WFH di minggu tersebut. Pengaturan ini dapat dinonaktifkan.</div>
+        <div id="libur-wfh-loading" style="color:var(--text-dim);font-size:0.82rem;padding:4px 0;">Memuat...</div>
+        <div id="libur-wfh-form" style="display:none;">
+          <div class="toggle-viewonly-active" id="libur-wfh-card" style="background:white;border-color:#e2e7f3;">
+            <div class="toggle-switch-wrap">
+              <label class="toggle-switch">
+                <input type="checkbox" id="toggle-allow-libur-wfh" onchange="saveAllowLiburWfh(this.checked)">
+                <span class="toggle-slider" style=""></span>
+              </label>
+              <div>
+                <div class="toggle-label" id="libur-wfh-label">Batasan Libur: Aktif</div>
+                <div class="toggle-desc" id="libur-wfh-desc">Pegawai tidak bisa pilih WFH jika ada hari libur di minggu yang sama.</div>
+              </div>
+            </div>
+          </div>
+          <div style="font-size:0.72rem;color:var(--text-dim);margin-top:8px;">💡 Jika <strong>dinonaktifkan</strong>: pegawai tetap bisa memilih WFH meskipun minggu tersebut ada hari libur nasional. Admin juga bisa menjadwalkan WFH untuk minggu berisi libur.</div>
+        </div>
       </div>
     </div>
 
@@ -737,7 +801,8 @@ Pegawai yang ditugaskan WFO pada hari Jumat dapat melaksanakan WFH pada hari Rab
       <h4>📋 Input Keterangan Absensi Pegawai</h4>
       <div style="font-size:0.8rem;color:var(--text-dim);margin-bottom:18px;">
         Catat keterangan absensi pegawai untuk tanggal tertentu. Kode <strong>TGS, CP, CWS, WFHK</strong> wajib mengisi keterangan.<br>
-        <span style="color:#6b21a8;font-weight:600;">Kode CUTI: CT = Cuti Tahunan · CP = Cuti Alasan Penting · CB = Cuti Besar · CS = Cuti Sakit · CSR = Cuti Sakit Rawat Inap · CBL = Cuti Bersalin · CLN = Cuti Diluar Tanggungan Negara</span>
+        <span style="color:#6b21a8;font-weight:600;">Kode CUTI: CT = Cuti Tahunan · CP = Cuti Alasan Penting · CB = Cuti Besar · CS = Cuti Sakit · CSR = Cuti Sakit Rawat Inap · CBL = Cuti Bersalin · CLN = Cuti Diluar Tanggungan Negara</span><br>
+        <span style="color:#7c3200;font-weight:600;">Kode Penugasan: TGS = Penugasan Umum · DKT = Diklat Klasikal · PJJ = Pelatihan Jarak Jauh · DL = Dinas Luar</span>
       </div>
       <!-- Langkah 1: Pilih Pegawai (multiple) -->
       <div class="ubah-step">
@@ -911,6 +976,45 @@ Pegawai yang ditugaskan WFO pada hari Jumat dapat melaksanakan WFH pada hari Rab
       </div>
     </div>
 
+    <!-- ══ SEKSI 3b: TAMBAH WFH MASSAL ══ -->
+    <div class="admin-section">
+      <h4>➕ Tambah WFH Massal (Multi Pegawai / Multi Tanggal)</h4>
+      <div style="font-size:0.8rem;color:var(--text-dim);margin-bottom:18px;">
+        Tambahkan jadwal WFH untuk banyak pegawai sekaligus, atau satu pegawai di banyak tanggal. Pilih beberapa pegawai, lalu centang satu atau lebih tanggal WFH.
+      </div>
+
+      <!-- Langkah 1: Pilih Pegawai (multiple) -->
+      <div class="ubah-step">
+        <div class="ubah-step-label">① Pilih Pegawai <span style="font-weight:400;color:var(--text-dim);font-size:0.78rem;">(bisa lebih dari satu)</span></div>
+        <div class="tukar-search-wrap">
+          <input type="text" id="mwfh-peg-inp" class="tukar-search-inp" placeholder="Cari nama atau NIP, pilih satu per satu..." oninput="mwfhPegSearch()" onfocus="mwfhPegSearch()" autocomplete="off">
+          <div class="tukar-dropdown" id="mwfh-peg-drop"></div>
+        </div>
+        <div id="mwfh-peg-tags" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;min-height:0;"></div>
+        <div id="mwfh-peg-empty" style="font-size:0.78rem;color:var(--text-dim);margin-top:6px;">Belum ada pegawai dipilih.</div>
+      </div>
+
+      <!-- Langkah 2: Pilih Bulan + Tanggal (checkboxes) -->
+      <div class="ubah-step" id="mwfh-step2" style="display:none;">
+        <div class="ubah-step-label">② Pilih Tanggal WFH <span style="font-weight:400;color:var(--text-dim);font-size:0.78rem;">(bisa pilih lebih dari satu hari)</span></div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap;">
+          <span style="font-size:0.78rem;font-weight:600;color:var(--navy);">Bulan:</span>
+          <select id="mwfh-bulan-sel" class="admin-sel" style="width:auto;font-size:0.82rem;" onchange="renderMwfhGrid()"></select>
+          <button onclick="mwfhSelectAll()" style="padding:6px 14px;border-radius:100px;font-size:0.72rem;font-weight:700;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;border:1.5px solid var(--navy);background:white;color:var(--navy);">☑ Pilih Semua</button>
+          <button onclick="mwfhClearAll()" style="padding:6px 14px;border-radius:100px;font-size:0.72rem;font-weight:700;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;border:1.5px solid #c8d4ea;background:white;color:var(--text-dim);">✕ Batal Semua</button>
+        </div>
+        <div id="mwfh-tgl-grid" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px;"></div>
+        <div id="mwfh-selected-info" style="font-size:0.76rem;color:var(--text-dim);margin-top:4px;"></div>
+      </div>
+
+      <!-- Preview & Aksi -->
+      <div class="ubah-info-box" id="mwfh-preview-box"></div>
+      <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap;">
+        <button class="btn-primary" onclick="eksekusiMwfh()" id="btn-mwfh" disabled style="background:var(--mint);">➕ Tambah WFH Massal Sekarang</button>
+        <button onclick="resetMwfh()" style="background:none;border:1.5px solid #e2e7f3;border-radius:10px;padding:10px 18px;font-size:0.82rem;font-weight:600;color:var(--text-dim);cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;">↺ Reset</button>
+      </div>
+    </div>
+
     <!-- ══ SEKSI 4: TUKAR JADWAL ══ -->
     <div class="admin-section">
       <h4>🔄 Tukar Jadwal WFH Antar Pegawai</h4>
@@ -1023,6 +1127,29 @@ Pegawai yang ditugaskan WFO pada hari Jumat dapat melaksanakan WFH pada hari Rab
       <div id="pengajuan-admin-list"><div class="empty-pengajuan">⏳ Memuat data...</div></div>
     </div>
 
+    <!-- ══ SEKSI: UBAH PIN ADMIN ══ -->
+    <div class="admin-section">
+      <h4>🔐 Ubah PIN Admin</h4>
+      <div style="font-size:0.8rem;color:var(--text-dim);margin-bottom:16px;">Ubah PIN untuk mengakses panel admin. PIN baru berlaku langsung setelah disimpan di kode sumber. <strong>Catatan:</strong> PIN disimpan di kode HTML — hubungi pengembang untuk update permanen.</div>
+      <div class="config-grid" style="max-width:400px;margin-bottom:12px;">
+        <div class="config-field">
+          <label>PIN Admin Baru</label>
+          <input type="password" id="admin-pin-new" class="config-inp" placeholder="Min. 4 karakter" maxlength="20">
+        </div>
+        <div class="config-field">
+          <label>Konfirmasi PIN Baru</label>
+          <input type="password" id="admin-pin-konfirm" class="config-inp" placeholder="Ulangi PIN baru" maxlength="20">
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+        <button class="btn-save" onclick="ubahPinAdmin()">🔐 Simpan PIN Baru (Sesi Ini)</button>
+        <div id="admin-pin-status" class="config-status"></div>
+      </div>
+      <div style="margin-top:10px;padding:10px 14px;background:#fff8e1;border-radius:10px;border:1px solid #fcd34d;font-size:0.75rem;color:#7a5f00;">
+        ⚠️ PIN baru hanya berlaku untuk <strong>sesi browser ini</strong>. Untuk perubahan permanen, update konstanta <code>ADMIN_PIN</code> di kode sumber HTML.
+      </div>
+    </div>
+
     <!-- ══ SEKSI: RESET PASSWORD PEGAWAI ══ -->
     <div class="admin-section">
       <h4>🔑 Reset Password Pegawai</h4>
@@ -1097,7 +1224,7 @@ Pegawai yang ditugaskan WFO pada hari Jumat dapat melaksanakan WFH pada hari Rab
    ══════════════════════════════════════════════ */
 const SUPA_URL  = 'https://jwkfzwhazwqctqaagfht.supabase.co';           // ← ganti
 const SUPA_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp3a2Z6d2hhendxY3RxYWFnZmh0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczNTU1NjEsImV4cCI6MjA5MjkzMTU2MX0.rBDdZ9Xk1-223_pykF8c5G8CmGDOVB8n_NULWgnnOC0'; // ← ganti
-const ADMIN_PIN = '123456';                              // ← ganti PIN
+const ADMIN_PIN = 'prima25';                              // ← PIN admin (ubah sesuai kebutuhan)
 
 /* Jadwal buka/tutup portal — 3 fase:
    FASE 1 — ISIAN   : TGL_BUKA  s/d TGL_TUTUP  → bisa daftar/batalkan WFH
@@ -1124,6 +1251,9 @@ const KODE_ABSENSI = [
   { kode:'CSR',  label:'Cuti Sakit Rawat Inap',             wajibKet:false, cssClass:'chip-csr'  },
   { kode:'CBL',  label:'Cuti Bersalin',                     wajibKet:false, cssClass:'chip-cbl'  },
   { kode:'CLN',  label:'Cuti Diluar Tanggungan Negara',     wajibKet:false, cssClass:'chip-cln'  },
+  { kode:'DKT',  label:'Diklat Klasikal',                   wajibKet:false, cssClass:'chip-tgs'  },
+  { kode:'PJJ',  label:'Pelatihan Jarak Jauh',              wajibKet:false, cssClass:'chip-tgs'  },
+  { kode:'DL',   label:'Dinas Luar',                        wajibKet:false, cssClass:'chip-tgs'  },
   { kode:'SAKIT',label:'Sakit',                             wajibKet:false, cssClass:'chip-sakit'},
   { kode:'IZIN', label:'Izin',                              wajibKet:false, cssClass:'chip-izin' },
 ];
@@ -1410,6 +1540,16 @@ function getBulanTarget() {
            m: (now.getMonth()+1) % 12 };
 }
 
+// Cek apakah tanggal termasuk bulan ini atau bulan depan (bulan target)
+function isBulanDiizinkan(tglDate) {
+  const now = new Date();
+  const bt = getBulanTarget();
+  const y = tglDate.getFullYear(), m = tglDate.getMonth();
+  const bulanIni = now.getMonth() === m && now.getFullYear() === y;
+  const bulanDepan = bt.m === m && bt.y === y;
+  return bulanIni || bulanDepan;
+}
+
 async function initCal() {
   showLoad(true);
   try {
@@ -1661,23 +1801,23 @@ async function handleDateClick(ds) {
   const hari=tgl.getDay();
 
   // ── 1. Cek apakah tanggal boleh didaftar ────────────────────────────────
-  // Hanya bisa daftar untuk bulan target (bulan depan). Bulan lalu & lewat ditolak.
+  // Bisa daftar untuk bulan ini atau bulan depan. Bulan sebelumnya atau lebih jauh ditolak.
   const bt=getBulanTarget();
   const now2=new Date(); now2.setHours(0,0,0,0);
   const bulanTglY=tgl.getFullYear(), bulanTglM=tgl.getMonth();
-  const bulanTargetY=bt.y, bulanTargetM=bt.m;
-  const sudahLewat=(bulanTglY<bulanTargetY)||(bulanTglY===bulanTargetY&&bulanTglM<bulanTargetM);
-  const terlaluJauh=(bulanTglY>bulanTargetY)||(bulanTglY===bulanTargetY&&bulanTglM>bulanTargetM);
+  const nowDate = new Date(); const nowY2 = nowDate.getFullYear(), nowM2 = nowDate.getMonth();
+  const sudahLewat=(bulanTglY<nowY2)||(bulanTglY===nowY2&&bulanTglM<nowM2);
+  const terlaluJauh=(bulanTglY>bt.y)||(bulanTglY===bt.y&&bulanTglM>bt.m);
   if(sudahLewat)
-    return swal('Periode Telah Lewat','Tidak dapat mendaftar WFH untuk bulan yang sudah lewat. Pendaftaran hanya untuk '+BULAN[bulanTargetM]+' '+bulanTargetY+'.','info');
+    return swal('Periode Telah Lewat','Tidak dapat mendaftar WFH untuk bulan yang sudah lewat. Pendaftaran untuk bulan ini dan '+BULAN[bt.m]+' '+bt.y+'.','info');
   if(terlaluJauh)
-    return swal('Belum Dibuka','Pendaftaran WFH untuk bulan ini belum dibuka. Pendaftaran hanya untuk '+BULAN[bulanTargetM]+' '+bulanTargetY+'.','info');
+    return swal('Belum Dibuka','Pendaftaran WFH untuk bulan tersebut belum dibuka. Pendaftaran hanya untuk bulan ini dan '+BULAN[bt.m]+' '+bt.y+'.','info');
 
   // ── 2. Cek weekend ───────────────────────────────────────────────────────
   if(hari===0||hari===6) return swal('Bukan Hari Kerja','Sabtu dan Minggu tidak bisa WFH.','warning');
 
   // ── 3. Cek libur nasional di minggu yang sama ────────────────────────────
-  if(adaLiburDiMinggu(tgl))
+  if(isLiburWfhDilarang() && adaLiburDiMinggu(tgl))
     return swal('Ada Libur Nasional','Minggu ini terdapat hari libur nasional. WFH tidak diizinkan.','warning');
 
   // ── 4. Cek sudah pilih tanggal ini → tawarkan batalkan ──────────────────
@@ -1833,6 +1973,8 @@ async function loadAdminConfig(){
     const kuotaPct = cfg.kuota_pct ?? (KUOTA_PCT * 100);
     document.getElementById('cfg-kuota-pct').value = kuotaPct;
     updateKuotaPreview(kuotaPct);
+    // Load holiday WFH restriction
+    loadLiburWfhState(cfg);
   } catch(e){}
   document.getElementById('config-loading').style.display='none';
   document.getElementById('config-form').style.display='block';
@@ -1866,6 +2008,7 @@ async function saveConfig(){
     kuota_pct:     parseFloat(document.getElementById('cfg-kuota-pct').value) || (KUOTA_PCT * 100),
   };
   if(S.dynCfg) payload.force_view_only = S.dynCfg.force_view_only || false;
+  if(S.dynCfg) payload.allow_libur_wfh = S.dynCfg.allow_libur_wfh || false;
   const {ok,err} = await db.from('portal_config').upsert(payload,'id');
   if(ok){
     await loadDynConfig();
@@ -1931,6 +2074,58 @@ function updateViewOnlyUI(active){
     label.style.color='';
     desc.innerHTML='Pegawai dapat mendaftar dan membatalkan WFH sesuai periode isian.';
   }
+}
+
+/* ══ KETENTUAN WFH + LIBUR NASIONAL ══ */
+function loadLiburWfhState(cfg) {
+  document.getElementById('libur-wfh-loading').style.display='none';
+  document.getElementById('libur-wfh-form').style.display='block';
+  // allow_libur_wfh=true berarti batasan DINONAKTIFKAN (boleh WFH meski ada libur)
+  const allow = !!(cfg && cfg.allow_libur_wfh);
+  document.getElementById('toggle-allow-libur-wfh').checked = allow;
+  updateLiburWfhUI(allow);
+}
+
+async function saveAllowLiburWfh(checked) {
+  const payload = { id:1, allow_libur_wfh: checked };
+  ['tgl_buka','jam_buka','tgl_tutup','jam_tutup','tgl_countdown','jam_countdown','force_view_only','kuota_pct'].forEach(k=>{
+    if(S.dynCfg && S.dynCfg[k] !== undefined) payload[k]=S.dynCfg[k];
+  });
+  const {ok,err} = await db.from('portal_config').upsert(payload,'id');
+  if(ok){
+    await loadDynConfig();
+    updateLiburWfhUI(checked);
+    alog('ok', checked ? '🏖️ Batasan WFH libur DINONAKTIFKAN — pegawai bisa WFH meski ada libur nasional.' : '🏖️ Batasan WFH libur DIAKTIFKAN — WFH tidak diizinkan di minggu berisi libur.');
+  } else {
+    document.getElementById('toggle-allow-libur-wfh').checked = !checked;
+    alog('err','Gagal mengubah pengaturan libur WFH: '+err);
+  }
+}
+
+function updateLiburWfhUI(allow) {
+  const card  = document.getElementById('libur-wfh-card');
+  const label = document.getElementById('libur-wfh-label');
+  const desc  = document.getElementById('libur-wfh-desc');
+  const toggle = document.getElementById('toggle-allow-libur-wfh');
+  if(!card||!label||!desc) return;
+  if(allow){
+    card.style.background='#f0fdf4'; card.style.borderColor='#86efac';
+    label.textContent='Batasan Libur: NONAKTIF (WFH Tetap Diizinkan)';
+    label.style.color='#15803d';
+    desc.innerHTML='✅ <strong>Pegawai tetap bisa memilih WFH</strong> meskipun ada hari libur nasional di minggu tersebut.';
+    if(toggle) toggle.nextElementSibling.style.background='#22c55e';
+  } else {
+    card.style.background='white'; card.style.borderColor='#e2e7f3';
+    label.textContent='Batasan Libur: Aktif';
+    label.style.color='';
+    desc.innerHTML='Pegawai tidak bisa pilih WFH jika ada hari libur di minggu yang sama.';
+    if(toggle) toggle.nextElementSibling.style.background='';
+  }
+}
+
+// Helper: cek apakah larangan libur aktif
+function isLiburWfhDilarang() {
+  return !getCfg('allow_libur_wfh', false);
 }
 
 /* ══════════════════════════════════════════════
@@ -2172,7 +2367,7 @@ function renderUbahTglGrid(){
     const hari = tgl.getDay();
     const isWE = hari===0||hari===6;
     const isLibur = S.liburSet && S.liburSet.has(ds);
-    const adaLiburMinggu = adaLiburDiMinggu(tgl);
+    const adaLiburMinggu = isLiburWfhDilarang() && adaLiburDiMinggu(tgl);
     const mingguDs = getSeninawal(ds);
     const adaWfhMingguIni = wfhPegLain.some(w=>getSeninawal(w.tanggal_wfh)===mingguDs);
     const terisi = terisiMap[d]||0;
@@ -2583,8 +2778,10 @@ function resetTukar(){
   document.getElementById('tukar-hasil').className='tukar-hasil';
 }
 
+let _adminPinDynamic = ADMIN_PIN; // bisa diubah sementara via UI
+
 function verifyPin(){
-  if(document.getElementById('pin-inp').value.trim()===ADMIN_PIN){
+  if(document.getElementById('pin-inp').value.trim()===_adminPinDynamic){
     S.pinOK=true; document.getElementById('pin-overlay').style.display='none';
     alog('ok','Akses admin diberikan.');
     loadAdminConfig();
@@ -2597,6 +2794,21 @@ function verifyPin(){
     setTimeout(()=>document.getElementById('pin-inp').style.borderColor='',1000);
     alog('err','PIN salah.');
   }
+}
+
+function ubahPinAdmin(){
+  const newPin = document.getElementById('admin-pin-new').value.trim();
+  const konfirm = document.getElementById('admin-pin-konfirm').value.trim();
+  const st = document.getElementById('admin-pin-status');
+  if(!newPin||newPin.length<4){ st.style.color='#e53e3e'; st.textContent='⚠️ PIN minimal 4 karakter.'; return; }
+  if(newPin!==konfirm){ st.style.color='#e53e3e'; st.textContent='⚠️ Konfirmasi PIN tidak cocok.'; return; }
+  _adminPinDynamic = newPin;
+  document.getElementById('admin-pin-new').value='';
+  document.getElementById('admin-pin-konfirm').value='';
+  st.style.color='#00875a';
+  st.textContent='✅ PIN berhasil diubah untuk sesi ini!';
+  alog('ok','PIN admin diubah untuk sesi ini.');
+  setTimeout(()=>{ st.textContent=''; st.style.color=''; },4000);
 }
 
 function adminGen(m){
@@ -2785,6 +2997,7 @@ function buildXlsxData(tahun,bulan,pegawai,wfhMap,tukarMap,absenMap,timOrder,grp
   const KODE_COLOR={
     'WFH': WFH_NORMAL, 'WFHK': COLOR_WFHK, 'CWS': COLOR_CWS,
     'TGS': COLOR_TGS, 'CP': COLOR_CP,
+    'DKT': COLOR_TGS, 'PJJ': COLOR_TGS, 'DL': COLOR_TGS,
     'CT': COLOR_CUTI, 'CB': COLOR_CUTI, 'CS': COLOR_CUTI,
     'CSR': COLOR_CUTI, 'CBL': COLOR_CUTI, 'CLN': COLOR_CUTI,
     'CUTI': COLOR_CUTI,
@@ -2793,6 +3006,7 @@ function buildXlsxData(tahun,bulan,pegawai,wfhMap,tukarMap,absenMap,timOrder,grp
   const KODE_FONT={
     'WFH':'FFFFFF','WFHK':'7a5f00','CWS':'0369a1',
     'TGS':'7c3200','CP':'7c3200',
+    'DKT':'7c3200','PJJ':'7c3200','DL':'7c3200',
     'CT':'6b21a8','CB':'5b21b6','CS':'86198f',
     'CSR':'9d174d','CBL':'be185d','CLN':'4c1d95',
     'CUTI':'6b21a8',
@@ -2933,6 +3147,9 @@ function buildXlsxData(tahun,bulan,pegawai,wfhMap,tukarMap,absenMap,timOrder,grp
     { kode:'WFHK', label:'Jumlah WFHK (WFH Khusus)',               bg:COLOR_WFHK, fg:'7a5f00' },
     { kode:'CWS',  label:'Jumlah CWS (Co-Working Space)',           bg:COLOR_CWS,  fg:'0369a1' },
     { kode:'TGS',  label:'Jumlah TGS (Penugasan)',                  bg:COLOR_TGS,  fg:'7c3200' },
+    { kode:'DKT',  label:'Jumlah DKT (Diklat Klasikal)',            bg:COLOR_TGS,  fg:'7c3200' },
+    { kode:'PJJ',  label:'Jumlah PJJ (Pelatihan Jarak Jauh)',       bg:COLOR_TGS,  fg:'7c3200' },
+    { kode:'DL',   label:'Jumlah DL (Dinas Luar)',                  bg:COLOR_TGS,  fg:'7c3200' },
     { kode:'CP',   label:'Jumlah CP (Cuti Alasan Penting)',         bg:COLOR_CP,   fg:'7c3200' },
     { kode:'CPH',  label:'Jumlah CPH (Cuti Setengah Hari Pagi)',    bg:COLOR_CP,   fg:'7c3200' },
     { kode:'CT',   label:'Jumlah CT (Cuti Tahunan)',                bg:COLOR_CUTI, fg:'6b21a8' },
@@ -4477,6 +4694,220 @@ async function prosesAdminPengajuan(id, status){
     swal('Gagal','Gagal memproses: '+(res.err||'Error'),'error');
   }
 }
+
+/* ══ TAMBAH WFH MASSAL (MULTI PEGAWAI / MULTI TANGGAL) ══ */
+let MWFH_pegawaiList = [];
+let MWFH_selectedDates = new Set();
+
+function mwfhPegSearch(){
+  const inp = document.getElementById('mwfh-peg-inp').value.toLowerCase();
+  const drop = document.getElementById('mwfh-peg-drop');
+  const list = UB.pegawaiList.length ? UB.pegawaiList : S.pegawaiAll;
+  const selectedNips = new Set(MWFH_pegawaiList.map(p=>p.nip));
+  const filtered = list.filter(p=> !selectedNips.has(p.nip) && (p.nama.toLowerCase().includes(inp)||p.nip.includes(inp))).slice(0,8);
+  if(!inp||!filtered.length){ drop.classList.remove('show'); return; }
+  drop.innerHTML = filtered.map(p=>`
+    <div class="tukar-opt" onclick="mwfhPilihPegawai('${p.nip}')">
+      <div>${p.nama}</div>
+      <div class="opt-sub">${p.nip} · ${p.tim_kerja||'-'}</div>
+    </div>`).join('');
+  drop.classList.add('show');
+}
+
+function mwfhPilihPegawai(nip){
+  const list = UB.pegawaiList.length ? UB.pegawaiList : S.pegawaiAll;
+  const p = list.find(x=>x.nip===nip);
+  if(!p) return;
+  if(!MWFH_pegawaiList.find(x=>x.nip===nip)) MWFH_pegawaiList.push(p);
+  document.getElementById('mwfh-peg-inp').value='';
+  document.getElementById('mwfh-peg-drop').classList.remove('show');
+  renderMwfhPegTags();
+  document.getElementById('mwfh-step2').style.display='block';
+  initMwfhBulanSel();
+  renderMwfhGrid();
+  updateMwfhPreview();
+}
+
+function mwfhHapusPeg(nip){
+  MWFH_pegawaiList = MWFH_pegawaiList.filter(p=>p.nip!==nip);
+  renderMwfhPegTags();
+  if(!MWFH_pegawaiList.length) document.getElementById('mwfh-step2').style.display='none';
+  updateMwfhPreview();
+}
+
+function renderMwfhPegTags(){
+  const wrap = document.getElementById('mwfh-peg-tags');
+  const empty = document.getElementById('mwfh-peg-empty');
+  if(!MWFH_pegawaiList.length){
+    wrap.innerHTML=''; empty.style.display='block'; return;
+  }
+  empty.style.display='none';
+  wrap.innerHTML = MWFH_pegawaiList.map(p=>`
+    <div style="display:inline-flex;align-items:center;gap:6px;background:#e8edf5;border:1px solid #c8d4ea;border-radius:100px;padding:5px 12px 5px 10px;font-size:0.78rem;font-weight:600;color:var(--navy);">
+      <span>👤 ${p.nama}</span>
+      <span onclick="mwfhHapusPeg('${p.nip}')" style="cursor:pointer;color:#ef4444;font-weight:800;font-size:0.9rem;line-height:1;" title="Hapus">×</span>
+    </div>`).join('');
+}
+
+let _mwfhBulanInit = false;
+function initMwfhBulanSel(){
+  if(_mwfhBulanInit) return;
+  _mwfhBulanInit = true;
+  const sel = document.getElementById('mwfh-bulan-sel');
+  sel.innerHTML='';
+  const now = new Date();
+  for(let i=0;i<=2;i++){
+    const d=new Date(now.getFullYear(),now.getMonth()+i,1);
+    const val=d.getFullYear()+'-'+(d.getMonth()+1);
+    const opt=document.createElement('option');
+    opt.value=val; opt.textContent=BULAN[d.getMonth()]+' '+d.getFullYear();
+    if(i===0) opt.selected=true;
+    sel.appendChild(opt);
+  }
+}
+
+function renderMwfhGrid(){
+  const grid = document.getElementById('mwfh-tgl-grid');
+  const selVal = document.getElementById('mwfh-bulan-sel').value;
+  if(!selVal){ grid.innerHTML=''; return; }
+  const [y,m] = selVal.split('-').map(Number);
+  const nHari = new Date(y,m,0).getDate();
+  const kuota = getKuota(S.totalPeg || UB.pegawaiList.length || 1);
+  const terisiMap={};
+  UB.wfhAll.forEach(w=>{
+    const d=new Date(w.tanggal_wfh+'T00:00:00');
+    if(d.getFullYear()===y && d.getMonth()+1===m)
+      terisiMap[d.getDate()]=(terisiMap[d.getDate()]||0)+1;
+  });
+  let html='';
+  for(let d=1;d<=nHari;d++){
+    const tgl=new Date(y,m-1,d);
+    const ds=y+'-'+String(m).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+    const hari=tgl.getDay();
+    const isWE=hari===0||hari===6;
+    const isLibur=S.liburSet&&S.liburSet.has(ds);
+    if(isWE||isLibur){
+      html+=`<div style="width:52px;height:52px;border-radius:10px;background:#f5f7fc;opacity:0.4;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:0.7rem;color:var(--text-dim);">
+        <div>${HARIS[hari]}</div><div style="font-weight:700;">${d}</div>
+      </div>`;
+    } else {
+      const terisi=terisiMap[d]||0;
+      const isPenuh=terisi>=kuota;
+      const isChecked=MWFH_selectedDates.has(ds);
+      const kuotaColor=isPenuh?'#e53e3e':terisi>=(kuota*0.75)?'#b7770d':'#00875a';
+      html+=`<div onclick="mwfhToggleDate('${ds}')" style="width:52px;height:52px;border-radius:10px;border:2px solid ${isChecked?'var(--mint)':'#e2e7f3'};background:${isChecked?'#e8faf5':'white'};cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:0.7rem;color:var(--navy);transition:all 0.15s;position:relative;" title="${terisi}/${kuota} terisi">
+        ${isChecked?'<div style="position:absolute;top:3px;right:5px;font-size:0.65rem;color:var(--mint);font-weight:800;">✓</div>':''}
+        <div style="font-weight:600;">${HARIS[hari]}</div>
+        <div style="font-size:0.82rem;font-weight:800;">${d}</div>
+        <div style="font-size:0.6rem;color:${kuotaColor};font-weight:700;">${terisi}/${kuota}</div>
+      </div>`;
+    }
+  }
+  grid.innerHTML=html;
+  updateMwfhPreview();
+}
+
+function mwfhToggleDate(ds){
+  if(MWFH_selectedDates.has(ds)) MWFH_selectedDates.delete(ds);
+  else MWFH_selectedDates.add(ds);
+  renderMwfhGrid();
+  updateMwfhPreview();
+}
+
+function mwfhSelectAll(){
+  const selVal = document.getElementById('mwfh-bulan-sel').value;
+  if(!selVal) return;
+  const [y,m] = selVal.split('-').map(Number);
+  const nHari = new Date(y,m,0).getDate();
+  for(let d=1;d<=nHari;d++){
+    const tgl=new Date(y,m-1,d);
+    if(tgl.getDay()===0||tgl.getDay()===6) continue;
+    const ds=y+'-'+String(m).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+    if(!(S.liburSet&&S.liburSet.has(ds))) MWFH_selectedDates.add(ds);
+  }
+  renderMwfhGrid();
+}
+
+function mwfhClearAll(){ MWFH_selectedDates.clear(); renderMwfhGrid(); }
+
+function updateMwfhPreview(){
+  const btn = document.getElementById('btn-mwfh');
+  const box = document.getElementById('mwfh-preview-box');
+  const info = document.getElementById('mwfh-selected-info');
+  const n = MWFH_selectedDates.size;
+  if(info) info.textContent = n>0 ? `✅ ${n} tanggal dipilih` : '';
+  if(!MWFH_pegawaiList.length||!n){ btn.disabled=true; box.className='ubah-info-box'; return; }
+  const totalOps = MWFH_pegawaiList.length * n;
+  const tglList = [...MWFH_selectedDates].sort();
+  const pegNames = MWFH_pegawaiList.map(p=>`<strong>${p.nama}</strong>`).join(', ');
+  box.className='ubah-info-box show';
+  box.innerHTML=`➕ Tambahkan WFH untuk ${MWFH_pegawaiList.length} pegawai (${pegNames}) × ${n} tanggal = <strong>${totalOps} data</strong>`;
+  btn.disabled=false;
+}
+
+async function eksekusiMwfh(){
+  if(!MWFH_pegawaiList.length||!MWFH_selectedDates.size) return;
+  const tglList = [...MWFH_selectedDates].sort();
+  const totalOps = MWFH_pegawaiList.length * tglList.length;
+  const {isConfirmed} = await Swal.fire({
+    title:'Konfirmasi Tambah WFH Massal',
+    html:`Tambahkan jadwal WFH untuk <strong>${MWFH_pegawaiList.length} pegawai</strong> × <strong>${tglList.length} tanggal</strong> = <strong>${totalOps} data</strong>?<br><br>
+      <span style="font-size:0.8rem;color:#6b7a99;">Data yang sudah ada akan ditimpa (upsert berdasarkan NIP+tanggal).</span>`,
+    icon:'question',showCancelButton:true,
+    confirmButtonText:'Ya, Tambahkan',cancelButtonText:'Batal',
+    confirmButtonColor:'#00c9a7'
+  });
+  if(!isConfirmed) return;
+  showLoad(true);
+  let gagal=0, berhasil=0;
+  for(const peg of MWFH_pegawaiList){
+    for(const ds of tglList){
+      const dtBaru=new Date(ds+'T00:00:00');
+      const {ok,err}=await db.from('pilihan_wfh').upsert({
+        nip:peg.nip, nama:peg.nama,
+        tanggal_wfh:ds, hari:HARI[dtBaru.getDay()],
+        minggu_ke:'Minggu ke-'+isoWeek(dtBaru),
+        is_tukar:false
+      },'nip,tanggal_wfh');
+      if(!ok){ gagal++; alog('err','Gagal WFH '+peg.nama+' '+ds+': '+err); }
+      else berhasil++;
+    }
+  }
+  showLoad(false);
+  // Refresh data
+  const btR=getBulanTarget();
+  const now3=new Date();
+  const tAR=now3.getFullYear()+'-'+String(now3.getMonth()+1).padStart(2,'0')+'-01';
+  const tBR=btR.y+'-'+String(btR.m+1).padStart(2,'0')+'-'+new Date(btR.y,btR.m+1,0).getDate();
+  const wRes=await db.from('pilihan_wfh').sel('nip,nama,tanggal_wfh,is_tukar').gte('tanggal_wfh',tAR).lte('tanggal_wfh',tBR).get();
+  UB.wfhAll=wRes.data||[];
+  S.wfhAll=UB.wfhAll;
+  alog('ok',`➕ WFH massal: ${berhasil} berhasil, ${gagal} gagal. (${MWFH_pegawaiList.length} pegawai × ${tglList.length} tanggal)`);
+  if(gagal>0) await swal('Sebagian Gagal',`${berhasil} data berhasil, ${gagal} gagal.`,'warning');
+  else await Swal.fire({title:'Berhasil! ✅',html:`<strong>${berhasil} data WFH</strong> berhasil ditambahkan.`,icon:'success',confirmButtonColor:'#0a1628'});
+  resetMwfh();
+}
+
+function resetMwfh(){
+  MWFH_pegawaiList=[];
+  MWFH_selectedDates.clear();
+  _mwfhBulanInit=false;
+  document.getElementById('mwfh-peg-inp').value='';
+  document.getElementById('mwfh-peg-drop').classList.remove('show');
+  renderMwfhPegTags();
+  document.getElementById('mwfh-step2').style.display='none';
+  document.getElementById('mwfh-tgl-grid').innerHTML='';
+  document.getElementById('mwfh-preview-box').className='ubah-info-box';
+  document.getElementById('btn-mwfh').disabled=true;
+}
+
+// Tutup dropdown MWFH saat klik di luar
+document.addEventListener('DOMContentLoaded',()=>{
+  document.addEventListener('click',e=>{
+    const mwfhWrap=document.getElementById('mwfh-peg-inp')?.closest('.tukar-search-wrap');
+    if(mwfhWrap&&!mwfhWrap.contains(e.target)) document.getElementById('mwfh-peg-drop')?.classList.remove('show');
+  });
+});
 
 /* ══ RESET PASSWORD PEGAWAI ══ */
 let _resetPegNip = '';
