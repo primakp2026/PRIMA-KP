@@ -1475,6 +1475,26 @@ const db = {
   }
 };
 
+// Helper khusus untuk simpan/update baris portal_config (id=1).
+// Tabel portal_config tidak punya unique constraint pada kolom "id",
+// sehingga upsert dengan on_conflict=id selalu gagal (400 PostgREST error
+// PGRST116/42P10: "there is no unique or exclusion constraint matching the ON CONFLICT").
+// Solusi: coba PATCH dulu (row id=1 biasanya sudah ada). Jika gagal,
+// baru lakukan INSERT baru tanpa on_conflict.
+async function savePortalConfig(payload){
+  const { id, ...fields } = payload;
+  // 1) Coba update baris yang sudah ada
+  const patchRes = await db.from('portal_config').eq('id', id).patch(fields);
+  if(patchRes.ok){
+    return { ok:true, err:null };
+  }
+  // 2) Jika gagal (kemungkinan baris belum ada), coba insert baru
+  const insRes = await db.from('portal_config').ins(payload);
+  if(insRes.ok) return { ok:true, err:null };
+  // Kembalikan error yang paling informatif
+  return { ok:false, err: insRes.err || patchRes.err };
+}
+
 /* ══════════════════════════════════════════════
    STATE
    ══════════════════════════════════════════════ */
@@ -2173,7 +2193,7 @@ async function saveConfig(){
   };
   if(S.dynCfg) payload.force_view_only = S.dynCfg.force_view_only || false;
   if(S.dynCfg) payload.allow_libur_wfh = S.dynCfg.allow_libur_wfh || false;
-  const {ok,err} = await db.from('portal_config').upsert(payload,'id');
+  const {ok,err} = await savePortalConfig(payload);
   if(ok){
     await loadDynConfig();
     // Update kuota display di halaman kalender
@@ -2212,7 +2232,7 @@ async function saveViewOnly(checked){
   ['tgl_buka','jam_buka','tgl_tutup','jam_tutup','tgl_countdown','jam_countdown'].forEach(k=>{
     if(S.dynCfg && S.dynCfg[k] !== undefined) payload[k]=S.dynCfg[k];
   });
-  const {ok,err} = await db.from('portal_config').upsert(payload,'id');
+  const {ok,err} = await savePortalConfig(payload);
   if(ok){
     await loadDynConfig();
     updateViewOnlyUI(checked);
@@ -2255,7 +2275,7 @@ async function saveAllowLiburWfh(checked) {
   ['tgl_buka','jam_buka','tgl_tutup','jam_tutup','tgl_countdown','jam_countdown','force_view_only','kuota_pct'].forEach(k=>{
     if(S.dynCfg && S.dynCfg[k] !== undefined) payload[k]=S.dynCfg[k];
   });
-  const {ok,err} = await db.from('portal_config').upsert(payload,'id');
+  const {ok,err} = await savePortalConfig(payload);
   if(ok){
     await loadDynConfig();
     updateLiburWfhUI(checked);
@@ -2987,7 +3007,7 @@ async function ubahPinAdmin(){
     if(S.dynCfg && S.dynCfg[k] !== undefined) payload[k]=S.dynCfg[k];
   });
 
-  const {ok,err} = await db.from('portal_config').upsert(payload,'id');
+  const {ok,err} = await savePortalConfig(payload);
   btn.disabled=false;
   if(ok){
     _adminPinDynamic = newPin; // update cache sesi
